@@ -1,0 +1,677 @@
+Overview
+To start integrating with theTeller API, you need a theTeller merchant account. See how to setup here: Setting up on theTeller.
+
+TheTeller API helps you create any type of payments flow from payment acceptance, e-commerce, recurring billing and a whole lots more.
+
+
+On your website
+
+Accept payments on your website with our JS libraries and checkout forms
+
+View Plugins
+
+E-commerce Websites
+
+Integrate our e-commerce plugins in your online stores
+
+View Plugins
+
+Mobile Apps
+
+Integrate our IOS and Android SDKs in your mobile apps
+
+View SDK
+Live Endpoint: https://prod.theteller.net
+Test Endpoint: https://test.theteller.net
+Setting up an Account on Theteller
+Setting up a merchant account is as easy as possible, simply sign up Signup Here . When you complete the signup form a verification mail will be sent to you to verify your email. Upon successful verification, our support team will contact you via email or phone call.
+
+Test Credentials
+Test API credentials will be created for your account to facilitate the integration phase. you can find your API credentials on your merchant dashbaord when you sign in.
+
+Live Credentials
+To go live simply contact our support team. Contact Support
+
+Adding Theteller to your website
+How Our New Theteller Inline JS Modal looks
+The Theteller inline JS code method is the easiest way to start accepting payment on your web applications. It offers a secure and convenient flow for users. The best part is that payment is done on your page, thereby eliminating the need to redirect to another page.
+
+
+Before going forward we might have eCommerce and mobile app plugins that can help you get started immediately on a platform of your choice. Click on the Plugins option below to see plugins for Theteller.
+
+Theteller Standard Checkout
+This shows you how to accept payments fast with Theteller Standard Checkout Page
+
+Live Endpoint: https://checkout.theteller.net
+Test Endpoint: https://checkout-test.theteller.net
+Accept payment quickly and securely using the standard method by calling the /initiate endpoint. When you call the endpoint we return a response with a payment link, do a redirect to the link and a secure payment form would be loaded for your customer to enter their payment details. When the transaction is completed we would call your redirect_url and append the payment response as query parameters.
+
+Step 1: Collect payment details.
+Collect the following data and send as a json payload to the /initiate.
+
+Parameter	Required	Data Type	Description
+merchant_id	true	string	Your merchant ID provided when you create an account.
+transaction_id	true	string	Unique transaction reference provided by you and must be 12 digits.
+desc	true	string	Text to be displayed as a short transaction narration.
+amount	true	string	Amount to charge.
+redirect_url	true	string	URL to redirect to when transaction is completed.
+email	true	string	Email of the customer.
+API_Key	true	string	Your merchant API key provided when you create an account.
+apiuser	true	string	Your merchant API Username provided when you create an account.
+Step 2: Initialise the payment.
+After collecting payment details initialise the payment by calling our API with the payment details, see an example below.
+
+REQUEST
+PHP
+C#
+Java
+         
+
+LIVE EndPoint
+Method: POST
+Endpoint/BaseURL: https://checkout.theteller.net/initiate
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+  "merchant_id":"Your merchant ID",
+  "transaction_id":"000000000000",
+  "desc":"Payment Using Checkout Page",
+  "amount":"000000000100",
+  "redirect_url":"http://redirect_url/response",
+  "email":"customer_email"
+}
+ 
+
+     
+Sample Response
+
+{
+    "status": "success",
+    "code": 200,
+    "reason": "Token successfully generated",
+    "token": "eU1xSFN5Ky92MUt5dmpnT",
+    "checkout_url": "https://test.theteller.net/checkout/checkout/eU1xSFN5Ky92MUt5dmpnT"
+}
+If the request is successful, a token and a full checkout url is returned as response. you are to redirect the user to the checkout page using the url value in the checkout_url field.
+
+What happens when the user completes the transaction on the page?
+
+When the user enter's their payment details, Theteller would validate then charge the card or mobile money. Once the charge is completed we would:
+
+Call your redirect url and post the response to you via url encoded data, we also append your transaction ID as query params to the url.
+
+Send an email to you and your customer on the successful payment. If email to customers is turned off we wouldn't send emails.
+
+Sample Callback Response
+
+https://redirect_url?code=000&status=successful&reason=transaction20%successful&transaction_id=000000000000
+                                                            
+Theteller Inline JS
+To use the Theteller Inline JS you need your merchant API Key, and follow the sample snippet below to add the inline js to your site or web application.
+
+Follow this steps to successfully collect payments from your customers easily:
+
+Copy the Theteller Inline JS script and paste on your site.
+
+Change the default API Keys to your keys, and the script url to your test url if you are performing a test payment.
+
+Create a unique and dynamic reference to pass as your transaction ID.
+
+Collect a test payment.
+
+ Completing a successful Theteller test
+
+Theteller uses two environments one for test and one for live. On test environment the API keys and script url are different from the API keys and script url on live. To get your test keys sign up on http://theteller.net/signup and retrieve your Test API key. When you use keys from the live environment with script url's from the test environment you get an "Invalid API key" error.
+
+When the user enters their card details, Theteller would do the following:
+
+validate the card
+
+charge it
+
+and redirect to your redirect_url with the transaction ID appended to the URL.
+
+Theteller Inline Quick Setup Method [Embed Code]
+
+To get started quickly, copy the code below to your payment page and replace each anchor tag appropriately. This will generate a button where the script is placed on your website. Remember to replace parameters with your own parameters.
+
+When the button is clicked, our secure payment modal will be popped up for your user to enter his payment details. On completion of the transaction the user is redirected to your redirect_url
+
+For production js please use "https://checkout-old.theteller.net/resource/api/inline/theteller_inline.js"
+
+<form>
+     <a class="ttlr_inline"
+        data-APIKey="Your API Key"
+        data-transid="000000000000"
+        data-amount="1"
+        data-customer_email="email@customer.com"
+        data-currency="GHS"
+        data-redirect_url="https://yoursite.com"
+        data-pay_button_text="Pay Now"
+        data-custom_description="Payment Using InlineJS"
+        data-payment_method="both">
+     </a>
+</form>
+
+<script type="text/javascript" src="https://checkout-test.theteller.net/resource/api/inline/theteller_inline.js"></script>
+                                        
+Sample Callback Response
+
+https://redirect_url?code=000&status=successful&reason=transaction20%successful&transaction_id=000000000000
+                                                            
+Theteller Inline Anchor Tag Parameters
+Parameter	Required	Description
+APIKey	true	Your merchant API key provided when you create an account.
+transid	true	Unique transaction reference provided by you.
+amount	true	Amount to charge.
+customer_email	true	Customer Email
+currency	true	Currency to charge customer in. Defaults to GHS
+redirect_url	true	URL to redirect to when transaction is completed.
+pay_button_text	true	Text to show on pay button.
+custom_description	true	Text to be displayed as a short transaction narration.
+payment_method	true	Choose between card or mobile money payment.
+e.g card, momo, both
+Checking payment response / verifying transaction.
+When a transaction is completed we append the transaction ID, status, code, reason to your redirect URL. you can check the status of the transaction using the transaction ID. In the example below we show a code snipet to check transaction status
+
+REQUEST
+PHP
+C#
+Java
+         
+
+ Method: GET
+Endpoint: /v1.1/users/transactions/Replace with transaction ID/status
+
+//Request Headers
+Content-Type: application/json
+Merchant-Id: Your Merchant ID
+Cache-Control: no-cache
+
+
+ 
+
+     
+Sample Response
+
+{
+    "code": "000",
+    "status": "approved",
+    "reason": "Transaction Successful",
+    "transaction_id": "000000000267",
+    "r_switch": "VIS",
+    "subscriber_number": "************1999",
+    "amount": 1
+}
+                                                        
+Fund Transfers
+This section describes how to transfer funds from merchant float account to mobile money or bank account.
+
+One of the core functionalities of Theteller API is to make transferring funds as easy as it gets, regardless of the payment channels or mode of collection, the process of moving funds is meant to be effortless and secure.
+
+To complete a successful fund trasfer, ensure you have setup a merchant transfer float account on the Theteller Dashboard. Login now to setup float account. When a transfer request is initiated, the merchant transfer float account is debited. In cases of failed fund transfers, a reversal is done.
+
+Request Parameters
+Parameter	Required	Type	Description
+merchant_id	true	string	Your merchant API key provided when you create an account.
+transaction_id	true	string	Unique transaction reference provided by you.
+amount	true	string	Amount to charge.
+processing_code	true	string	This is a transaction type identifier. 404000 is default for transfer to mobile money.
+
+404020 for bank transfer
+r-switch	true	string	Account issuer or network on which the account to be debited resides. default is "FLT" for float
+desc	true	string	Text to be displayed as a short transaction narration.
+pass_code	true	string	Unique pass code generated when you create a float account.
+account_number	true	string	Recipient account number or wallet number for transfer transaction.
+account_issuer	true	string	The network the account belongs to. e.g
+"MTN" for MTN
+"ATL" for Airtel
+"ZPY" for Zeepay
+"GMY" for G-money
+"VDF" for Vodafone
+"TGO" for Tigo
+"GIP" for bank account transfer
+account_bank	true	string	The recipient bank account, e.g "GCB" for Ghana commercial bank. See All Banks
+To Mobile Money
+Theteller API makes it possible to transfer funds to any mobile money service provider in Ghana. This allows merchants transfer funds from their merchant transfer float account to any valid mobile money number subscribed on MTN, Airtel, Tigo, Vodafone network instantly.
+
+REQUEST
+PHP
+C#
+Java
+         
+
+
+Method: POST
+Endpoint: /v1.1/transaction/process
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+
+  "account_number":"0240000000",
+  "account_issuer":"MTN",
+  "merchant_id":"Your Merchant ID",
+  "transaction_id"=>"000000000000",
+  "processing_code"=>"404000",
+  "amount"=>"000000000020",
+  "r-switch"=>"FLT",
+  "desc"=>"Float Transfer Test",
+  "pass_code"=>"Your Pass code"
+}
+ 
+
+     
+To Bank Account
+Now you can credit any local bank account in Ghana instantly with Theteller API. Theteller API provides the functionality for merchants to transfer funds from their float account to any bank account in Ghana.
+
+REQUEST
+PHP
+C#
+Java
+         
+
+
+Method: POST
+Endpoint: /v1.1/transaction/process
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+
+  "account_number":"0082000141685300",
+  "account_bank":"GCB",
+  "account_issuer":"GIP",
+  "merchant_id":"Your Merchant ID",
+  "transaction_id":"000000000000",
+  "processing_code":"404020",
+  "amount":"000000000020",
+  "r-switch":"FLT",
+  "desc":"Float Transfer Test",
+  "pass_code":"Your Pass code"
+}
+ 
+
+     
+Sample Response
+   
+
+{
+    "status": "successful",
+    "code": "000",
+    "reference_id": "153600134089",
+    "account_name": "Kweku Adjei",
+    "reason": "Success"
+}
+   
+
+  
+On successful name enquiry response, the account name associated to the provided account number is returned. To continue the transfer, confirm that the account name is actually the account you wish to credit.
+
+To complete bank transfer, make the below request.
+
+Complete Bank Transfer
+REQUEST
+PHP
+C#
+Java
+         
+
+
+Method: POST
+Endpoint: /v1.1/transaction/bank/ftc/authorize
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+  "merchant_id":"Your Merchant ID",
+  "reference_id":"000000000000"
+}
+ 
+
+     
+Payments
+This section describes how to collect payments directly from your web application.
+
+Merchant who are PCI DSS Compliant and have a secured system in place can send card details directly from their application to Theteller to process.
+
+Request Parameters
+Parameter	Required	Type	Description
+merchant_id	true	string	Your merchant API key provided when you create an account.
+transaction_id	true	string	Unique transaction reference provided by you.
+amount	true	string	Amount to charge.
+processing_code	true	string	This is a transaction type identifier. 404000 is default for transfer to mobile money
+"000000" for card payment
+"000200" for mobile money payment
+r-switch	true	string	Account issuer or network on which the account to be debited resides.
+"VIS" for Visa
+"MAS" for MasterCard
+"MTN" for MTN
+"VDF" for Vodafone
+"ATL" for Airtel
+"TGO" for Tigo
+desc	true	string	Text to be displayed as a short transaction narration.
+customer_email	true	string	Your customer email.
+card_holder	true	string	Card holder name on card.
+currency	true	string	Currency to charge card
+pan	true	string	card pan number on card
+exp_month	true	string	Expiry month of card
+exp_year	true	string	Expiry year of card
+cvv	true	string	CVV on back of card
+3d_url_response	true	string	Callback url to return your user to when transaction is completed
+subscriber_number	true	string	Mobile money wallet to charge
+Card Payments
+Theteller API processes VISA, MasterCard and TelaCards, other card schemes will be added to the list soon. Every request requires the following request headers.
+
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+                                                    
+To complete a successful payment request send the following request
+
+         
+
+
+Method: POST
+Endpoint: /v1.1/transaction/process
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+  "processing_code":"000000",
+  "r-switch":"VIS",
+  "transaction_id":"000000000000",
+  "merchant_id":"Your merchant ID",
+  "pan":"4310000000000000",
+  "3d_url_response":"your_redirect_url",
+  "exp_month":"05",
+  "exp_year":"21",
+  "cvv":"000",
+  "desc":"Card Payment Test",
+  "amount":"000000000100",
+  "currency":"GHS",
+  "card_holder":"Card Holder Name",
+  "customer_email":"Customer Email"
+}
+ 
+
+     
+Sample Response
+
+{
+  "transaction_id":"000000000000",
+  "status": "approved",
+  "code": "000",
+  "reason": "Transaction successful!"
+}
+                                                    
+Card Reversal
+Theteller API allows you to process reversal transaction from VISA, MasterCard and TelaCards. Every request requires the following request headers.
+
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+                                                    
+To process a reversal request send the following request
+
+
+
+Method: POST
+Endpoint: https://prod.theteller.net/rest/resources/card/reversal
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{ 
+      "merchant_id": "0000000000",
+      "transaction_id": "000000000000",
+      "amount": "000000000100"
+}
+
+                                                    
+Sample Response
+
+{
+  "transaction_id":"000000000000",
+  "status": "approved",
+  "code": "000",
+  "reason": "Transaction successful!"
+}
+                                                    
+Handling VBV
+VBV is an acronym form Verified for Visa, this is a security feature on cards which requires further authorization by card holder when such cards are used for online transaction.
+
+If your payment request get a response as shown below, it means the request requires further authorization by card holder. Simply redirect your user to the url specied in the reason field in the response. The URL takes the user to his card issuing bank secure ACS page to complete transaction
+
+
+{
+    "status": "vbv required",
+    "code": 200,
+    "reason": "https://test.theteller.net/v1.1/3ds/resource/authentication/000000000000"
+}
+                                                    
+After your user completes payment authorization, user is redirected to your provided 3d_redirect_url. The result of the transaction is appended to the url.
+
+
+https://redirect_url?code=000&status=successful&reason=transaction20%successful&transaction_id=000000000000
+                                                    
+Mobile Money Payments
+Theteller API processes multiple mobile money platform MTN, Vodafone, Airtel, Tigo. Every request requires the following request headers.
+
+Request Parameters
+Parameter	Required	Type	Description
+merchant_id	true	string	Your merchant API key provided when you create an account.
+transaction_id	true	string	Unique transaction reference provided by you.
+amount	true	string	Amount to charge.
+processing_code	true	string	This is a transaction type identifier. 404000 is default for transfer to mobile money
+
+"000200" for mobile money payment
+r-switch	true	string	Account issuer or network on which the account to be debited resides.
+
+"MTN" for MTN
+"VDF" for Vodafone
+"ATL" for Airtel
+"TGO" for Tigo
+"ZPY" for Zeepay
+"GMY" for G-money
+desc	true	string	Text to be displayed as a short transaction narration.
+subscriber_number	true	string	Mobile money wallet to charge (10 - 12).
+      
+
+ //Request Headers
+  Content-Type: application/json
+ Authorization: Basic base64_encode('your API username:your API Key')
+ Cache-Control: no-cache
+
+
+                                        
+To complete a successful payment request send the following request
+
+          
+
+Method: POST
+Endpoint: /v1.1/transaction/process
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+    "amount" : "000000000200",
+    "processing_code" : "000200",
+    "transaction_id" : "000000000000",
+    "desc" : "Mobile Money Payment Test",
+    "merchant_id" : "Your Merchant ID",
+    "subscriber_number" : "233243124824",
+    "r-switch" : "MTN"
+}
+
+    
+
+      
+Sample Response
+            
+
+{
+  "transaction_id":"000000000000",
+  "status": "approved",
+  "code": "000",
+  "reason": "Transaction successful!"
+}
+            
+
+        
+API Keys
+This section describes what API keys are and how to retrieve them.
+
+Theteller authenticates your API requests using your account’s API keys. If you do not include your key when making an API request, or use one that is incorrect or outdated, Theteller returns an error.
+
+All API requests exist in either test or live mode, and one mode cannot be manipulated by data in the other. To get your test api keys you need to sign up here
+
+Obtaining your API Keys
+Your API keys are available in the Dashboard by navigating to My Account.
+
+
+ Only use your test API keys for testing and development.
+
+If you cannot see your API keys in the Dashboard, this means you do not have access to them, kindly contact your Theteller support.
+
+Test and live modes
+The test and live modes function almost identically, with a few necessary differences:
+
+In test mode, payments are not processed by card networks or payment providers, and only our Test cards can be used
+Plugins
+This page list all plugins available on Theteller.
+
+Plugins make integrations on Theteller a lot faster. Here are the plugins we have at the moment, please feel free to contact ps_dev@payswitch.com.gh if you need help developing a plugin or you've developed a plugin and want it to be listed here.
+
+Wordpress
+Woocommerce: WooCommerce is an eCommerce store plugin for selling both digital and physical products -
+ Download Theteller WooCommerce Plugin
+
+Magento
+Magento is a modern cloud commerce platform with an open-source ecosystem.
+
+ Download Theteller Magento Plugin
+Mobile SDK
+Theteller android sdk allows you to integrate payment faster into you android mobile app.
+
+ Download Theteller Android SDK
+Theteller Swift sdk allows you to integrate payment faster into you IOS mobile app.
+
+ Download Theteller Swift SDK
+OpenCart
+OpenCart is an online store management system. It is PHP-based.
+
+ Download Theteller OpenCart Plugin
+Test Cards
+Test cards for Theteller.
+
+No VBV
+4448366600675430
+Expiry: 02/21
+
+CVV: 330
+
+VBV Enabled
+4012001037141112
+Expiry: 12/27
+
+CVV: 212
+
+VBV Enabled
+4111111111111111
+Expiry: 12/21
+
+CVV: 123
+
+Test Bank Account
+Test Bank Accounts for transfers to bank account.
+
+Kweku Adjei
+1082000131684304
+Bank: ADB
+
+Theteller Response Codes
+Code	Reason
+000	Transaction successful
+101	Insufficient funds in wallet
+101, 105	Insufficient funds in wallet
+100	Transaction not permitted to cardholder
+102	Number not registered for mobile money
+103	Wrong PIN or transaction timed out
+104	Transaction declined or terminated
+105	Invalid amount or general failure. Try changing transaction id
+111	Payment request sent successfully
+107	USSD is busy, please try again later
+114	Invalid Voucher code
+200	VBV Required
+100	Transaction Failed or Declined
+600	Access Denied
+979	Access Denied. Invalid Credential
+909	Duplicate Transaction ID. Transaction ID must be unique
+999	Access Denied. Merchant ID is not set
+List of Banks
+Bank Code	Bank Name
+SCH	STANDARD CHARTERED BANK
+ABG	ABSA BANK GHANA LIMITED
+GCB	GCB BANK LIMITED
+NIB	NATIONAL INVESTMENT BANK
+ADB	AGRICULTURAL DEVELOPMENT BANK
+UMB	UNIVERSAL MERCHANT BANK
+RBL	REPUBLIC BANK LIMITED
+ZEN	ZENITH BANK GHANA LTD
+ECO	ECOBANK GHANA LTD
+CAL	CAL BANK LIMITED
+PRD	PRUDENTIAL BANK LTD
+STB	STANBIC BANK
+GTB	GUARANTY TRUST BANK
+UBA	UNITED BANK OF AFRICA
+ACB	ACCESS BANK LTD
+CBG	CONSOLIDATED BANK GHANA
+SGG	SOCIETE GENERALE GHANA
+FNB	FIRST NATIONAL BANK
+UNL	UNITY LINK
+FDL	FIDELITY BANK LIMITED
+SIS	SERVICES INTEGRITY SAVINGS & LOANS
+BOA	BANK OF AFRICA
+DFL	DALEX FINANCE AND LEASING COMPANY
+FBO	FIRST BANK OF NIGERIA
+GHL	GHL Bank
+BOG	BANK OF GHANA
+FAB	FIRST ATLANTIC BANK
+SSB	OmniBSIC Bank
+GMY	G-MONEY
+APX	ARB APEX BANK LIMITED

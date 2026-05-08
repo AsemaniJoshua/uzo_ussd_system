@@ -1,0 +1,21 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy
+aiomysql
+alembic
+python-jose
+passlib[bcrypt]
+httpx
+pydantic
+python-dotenv
+databases          # optional helper if you want it; not required
+pydantic-settings
+pymysql
+uvicorn
+cryptography
+pydantic-settings
+python-multipart
+passlib[bcrypt]
+bcrypt
+pandas
+openpyxl

@@ -1,0 +1,6 @@
+id_rsa
+*.pyc
+__pycache__/
+.env
+*.log
+*.sqlite

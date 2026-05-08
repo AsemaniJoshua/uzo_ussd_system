@@ -1,0 +1,155 @@
+Request Body
+This is the request we send to your callback URL when someone dials your USSD Code.
+
+
+content_copy
+Copy
+{
+    "sessionId": "3-17074657982460137",
+    "new": true,
+    "msisdn": "233241235993",
+    "network": 3,
+    "message": "",
+    "extension": "109",
+    "data": "11005"
+}
+Response Body
+This is the response you send back to us after we call your callback URL.
+
+
+content_copy
+Copy
+{
+    "message": "Menu\n1) Balance\n2) Account Information",
+    "reply": true
+}
+Parameters
+Parameter	Type	Description
+sessionid	String	This is a unique id to track a USSD session
+new	Boolean	This specifies whether this is a new USSD session or a continuing USSD session
+msisdn	String	Mobile number of the initiator of the USSD
+network	Integer	This is the network of the initiator of the USSD. 3 - MTN, 5 - AT, 6 - Telecel
+message	String	This is the message/response sent by the initiator of the USSD
+extension	String	This is your assigned USSD code
+data	String	Any other data entered when initiating a request. Eg. If initiator dials: *203*109*11005#, data = 11005.
+reply	Boolean	Specifies whether a response is expected from the initiator of the USSD. true - Reply is expected, false - Reply is not expected, end the session
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+USSD (Unstructured Supplementary Service Data) provides a powerful way to reach users without internet access. By maintaining session state on your server, you can build complex applications like banking menus, voting systems, or data collection forms.
+
+How it Works
+When a user dials your shortcode (e.g., *203#), Moolre sends a POST request to your configured callback URL. The request contains a sessionid which persists across the interaction.
+
+Your server must respond with a JSON object containing:
+
+message: The text to display on the user's screen.
+reply: A boolean. true keeps the session open for user input; false ends the session.
+The State Machine Pattern
+Since HTTP is stateless, you need to track "where" the user is in your menu. You can use the sessionid as a key in a database (Redis, SQL) to store the user's current "stage".
+
+Stage: MENU
+arrow_right_alt
+Stage: INPUT_AMOUNT
+arrow_right_alt
+Stage: CONFIRM
+Code Example
+Below is a Node.js implementation of a simple banking menu that allows users to check their balance or initiate a transfer.
+
+Node.js
+Python
+PHP
+USSD Logic Handler
+
+content_copy
+Copy
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+# Flask USSD Handler
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+sessions = {}
+
+@app.route('/ussd', methods=['POST'])
+def ussd_handler():
+    data = request.json
+    session_id = data.get('sessionid')
+    msg = data.get('message')
+    is_new = data.get('new')
+    
+    if is_new:
+        sessions[session_id] = {'stage': 'HOME'}
+        return jsonify({
+            "message": "Welcome Service\n1. My Info\n2. Subscribe",
+            "reply": True
+        })
+        
+    stage = sessions.get(session_id, {}).get('stage')
+    
+    if stage == 'HOME':
+        if msg == '1':
+            return jsonify({ "message": "You are John Doe", "reply": False })
+        elif msg == '2':
+            sessions[session_id]['stage'] = 'SUB'
+            return jsonify({ "message": "Choose Plan:\n1. Daily\n2. Weekly", "reply": True })
+            
+    elif stage == 'SUB':
+        plan = "Daily" if msg == '1' else "Weekly"
+        return jsonify({ 
+            "message": f"You subscribed to {plan} plan.", 
+            "reply": False 
+        })
+        
+    return jsonify({ "message": "Error", "reply": False })
+Tips & Tricks
+Timeout Handling: USSD sessions time out quickly (usually 30-60 seconds). Keep your API response times under 2 seconds.
+Character Limits: USSD screens vary by device. Keep your message concise (under 160 chars) to ensure it displays correctly on all phones.
+Pagination: For long lists, implement a "Press 9 for more" logic to handle pagination manually within your state machine.

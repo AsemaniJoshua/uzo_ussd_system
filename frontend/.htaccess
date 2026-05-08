@@ -1,0 +1,97 @@
+# # Disable directory listing
+# Options -Indexes
+
+# RewriteEngine On
+
+# # Allow Next.js static files through
+# RewriteRule ^_next/static/ - [L]
+
+# # Serve static files directly
+# RewriteCond %{REQUEST_FILENAME} -f
+# RewriteRule ^ - [L]
+
+# # Redirect direct folder access to homepage (with address bar update)
+# RewriteCond %{REQUEST_FILENAME} -d
+# RewriteRule ^.*$ / [R=302,L]
+
+# # For all other requests, serve index.html (SPA fallback)
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^ index.html [L]
+
+
+# -----------------------------------------------------------------------------------------
+                  # Gemini First Config
+# ------------------------------------------------------------------------------------------
+
+# Disable directory listing
+# Options -Indexes
+
+# RewriteEngine On
+
+# # 1. Handle trailing slashes: redirect /path/ to /path for consistency
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# # 2. Allow Next.js internal static files through immediately
+# RewriteRule ^_next/static/ - [L]
+
+# # 3. Serve the file if it exactly matches an existing file or directory
+# RewriteCond %{REQUEST_FILENAME} -f [OR]
+# RewriteCond %{REQUEST_FILENAME} -d
+# RewriteRule ^ - [L]
+
+# # 4. CLEAN URLS: Map /path to /path.html
+# # This allows clicking "Packages" (/packages) to serve "packages.html"
+# RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+# RewriteRule ^(.*)$ $1.html [L]
+
+# # 5. SPA FALLBACK: If the route is not a file, directory, or .html file, 
+# # let the main index handle it (required for some Next.js routing)
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^ index.html [L]
+
+# # 6. HANDLE ERROR 404
+# ErrorDocument 404 /404.html
+
+
+
+
+
+# --------------------------------------------------------------------------------------------
+# Second Gemini Config
+# --------------------------------------------------------------------------------------------
+
+# Disable directory listing and MultiViews to prevent routing conflicts
+Options -Indexes -MultiViews
+
+RewriteEngine On
+
+# 1. THE 403 FIX: If a directory is requested but a .html file exists with that name,
+# prioritize and serve the .html file.
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.*?)/?$ $1.html [L]
+
+# 2. Handle trailing slashes: redirect /path/ to /path for consistency 
+# (only if a .html file exists to handle it)
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# 3. Allow Next.js internal static files through immediately
+RewriteRule ^_next/static/ - [L]
+
+# 4. Serve the file if it exactly matches an existing file
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# 5. SPA FALLBACK: If the route is not a file or a direct .html match,
+# let the main index handle it.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+# 6. Error handling
+ErrorDocument 404 /404.html
+
