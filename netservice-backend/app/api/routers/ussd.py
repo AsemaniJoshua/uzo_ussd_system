@@ -385,7 +385,8 @@ async def ussd_callback(
             logger.warning(f"Unknown network code: {network_code}")
             return UzoUSSDResponse(message="Network not supported.", ussdServiceOp=17).model_dump()
 
-        # Check USSD restriction before processing
+        # Check USSD restriction before processing - Commented out as requested
+        """
         from app.usecases.settings_usecases import SettingsUseCases
         from app.db.session import AsyncSessionLocal
         async with AsyncSessionLocal() as db:
@@ -405,6 +406,7 @@ async def ussd_callback(
                     ).model_dump()
                 else:
                     logger.info(f"USSD restricted - User {msisdn} has paid before. Access allowed.")
+        """
 
         # Initialize or get session state
         session = get_or_create_session(session_id, is_new_session)

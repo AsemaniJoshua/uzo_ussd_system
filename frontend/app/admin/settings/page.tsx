@@ -150,7 +150,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* USSD Access Control */}
+              {/* USSD Access Control - Commented out as requested
               <div className="border-t pt-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <Shield className="w-5 h-5 mr-2 text-blue-600" />
@@ -187,6 +187,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+              */}
 
               {/* Change Password */}
               <div className="border-t pt-6">
