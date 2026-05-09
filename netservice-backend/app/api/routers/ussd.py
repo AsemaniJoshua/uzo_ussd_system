@@ -25,9 +25,9 @@ logger = logging.getLogger("ussd")
 class UzoUSSDRequest(BaseModel):
     ussdString: str
     msisdn: str
-    ussdServiceOp: str  # "1"=init, "18"=cont, "29+"=term
+    ussdServiceOp: str | int  # "1"=init, "18"=cont, "29+"=term
     sessionID: str
-    network: str
+    network: str | int
     code: str = ""
     country: str = "GH"
     
@@ -369,8 +369,8 @@ async def ussd_callback(
         session_id = ussd_request.sessionID
         msisdn = ussd_request.msisdn
         user_input = ussd_request.ussdString
-        network_code = ussd_request.network
-        service_op = ussd_request.ussdServiceOp
+        network_code = str(ussd_request.network)
+        service_op = str(ussd_request.ussdServiceOp)
         is_new_session = service_op == "1"
 
         # Handle missing or invalid session ID
