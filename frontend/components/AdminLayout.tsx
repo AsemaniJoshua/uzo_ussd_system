@@ -23,7 +23,7 @@ const navigation = [
   { name: 'Packages', href: '/admin/packages', icon: Package },
   { name: 'Served Products', href: '/admin/products', icon: Package },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCard },
-  { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database },
+  // { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database },
   { name: 'Admins', href: '/admin/admins', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]

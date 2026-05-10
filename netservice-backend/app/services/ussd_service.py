@@ -8,7 +8,7 @@ from typing import Tuple
 ## Packages will now be loaded from the database, not hardcoded here.
 
 async def generate_main_menu():
-    return "Welcome to NetService NT: The Data is NOT INSTANT. It takes between 5min to 24hrs to deliver\n\n1. Buy Data bundle\n2. Contact Support"
+    return "Welcome to NetService NT: The Data is NOT INSTANT. It takes between 1min to 5mins to deliver\n\n1. Buy Data bundle\n2. Contact Support"
 
 def contact_support_text():
     return "WhatsApp: 0505235329\nCall: 0505235329"
@@ -75,5 +75,5 @@ def confirm_menu(package_name: str, amount: str, recipient: str):
     return f"Confirm\nBundle: {package_name}\nAmount: GHS {amount}\nRecipient: {recipient}\n\nWait and approve MoMo prompt on your phone.\n\n1. Confirm"
 
 def final_payment_message():
-    return "Payment initiated! Approve the MoMo prompt. Bundle will be delivered within 2mins to 24hrs.Dial *170# if payment prompt delays or fails to show."
+    return "Payment initiated! Approve the MoMo prompt. Bundle will be delivered within 1mins to 5mins.Dial *170# if payment prompt delays or fails to show."
 
