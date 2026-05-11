@@ -91,3 +91,49 @@ fi
 echo "SSH tunnel established. Starting FastAPI..."
 # Start FastAPI app
 exec uvicorn app.main:app --host 0.0.0.0 --port 8001
+
+
+
+
+# _________________________________________________________________________________________________________________________________________________________
+# cat << 'EOF' > entrypoint.sh
+# #!/bin/sh
+# set -e
+
+# # Verify key exists
+# if [ ! -f /root/.ssh/id_rsa ]; then
+#     echo "Key missing at /root/.ssh/id_rsa"
+#     exit 1
+# fi
+
+# # Clean up known_hosts and scan the server to avoid the "trust" prompt
+# mkdir -p /root/.ssh
+# touch /root/.ssh/known_hosts
+# ssh-keyscan -p 21098 ://web-hosting.com >> /root/.ssh/known_hosts
+
+# start_ssh_tunnel() {
+#     while true; do
+#         echo "Starting SSH tunnel..."
+#         # -L 5522:127.0.0.1:3306 maps the remote DB to local port 5522
+#         ssh -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -N -L 5522:127.0.0.1:3306 netscwjx@://web-hosting.com -p 21098 -i /root/.ssh/id_rsa
+#         sleep 5
+#     done
+# }
+
+# start_ssh_tunnel &
+# TUNNEL_PID=$!
+
+# # Wait for tunnel to be active before starting FastAPI
+# for i in $(seq 1 10); do
+#     if nc -z 127.0.0.1 5522; then
+#         echo "SSH tunnel established. Starting FastAPI..."
+#         exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+#     fi
+#     sleep 3
+# done
+
+# echo "Tunnel failed."
+# kill $TUNNEL_PID
+# exit 1
+# EOF
+
