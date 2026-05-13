@@ -8,7 +8,19 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
 
-    DATABASE_URL: str
+    # DATABASE_URL: str
+    DATABASE_URL: str | None = None
+    
+    # SSH Tunnel Configuration
+    SSH_HOST: str | None = None
+    SSH_USER: str | None = None
+    SSH_PASSWORD: str | None = None
+    SSH_PORT: int = 21098
+    
+    # Database Configuration (for dynamic URL building)
+    DB_USER: str | None = None
+    DB_PASSWORD: str | None = None
+    DB_NAME: str | None = None
 
     MOOLRE_CALLBACK_SECRET: str | None = None
 
@@ -24,6 +36,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        # extra = "ignore"
+        extra = "ignore"
 
 settings = Settings()

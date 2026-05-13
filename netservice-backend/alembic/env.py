@@ -9,12 +9,44 @@ from alembic import context
 # Load .env variables automatically
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
-config = context.config
 
-# Convert async DATABASE_URL to sync for migrations
-database_url = os.getenv('DATABASE_URL')
-if database_url and 'aiomysql' in database_url:
-    database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
+from app.core.config import settings
+
+# Programmatic SSH Tunnel for migrations
+tunnel = None
+db_port = 5522 # Default MySQL port
+
+if settings.SSH_HOST:
+    from sshtunnel import SSHTunnelForwarder
+    print(f"Establishing SSH tunnel for migrations to {settings.SSH_HOST}...")
+    tunnel = SSHTunnelForwarder(
+        (settings.SSH_HOST, settings.SSH_PORT),
+        ssh_username=settings.SSH_USER,
+        ssh_password=settings.SSH_PASSWORD,
+        remote_bind_address=('127.0.0.1', 3306),
+        local_bind_address=('127.0.0.1', 10022),
+    )
+    tunnel.start()
+    db_port = tunnel.local_bind_port
+    print(f"Tunnel active on port {db_port}")
+
+# Construct synchronous URL for migrations
+if settings.DATABASE_URL:
+    database_url = settings.DATABASE_URL
+    if 'aiomysql' in database_url:
+        database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
+else:
+    # Build from components
+    database_url = f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@127.0.0.1:{db_port}/{settings.DB_NAME}"
+
+# --- ORIGINAL MIGRATION CONFIG (Commented Out) ---
+# # Convert async DATABASE_URL to sync for migrations
+# database_url = os.getenv('DATABASE_URL')
+# if database_url and 'aiomysql' in database_url:
+#     database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
+# config.set_main_option('sqlalchemy.url', database_url)
+
+config = context.config
 config.set_main_option('sqlalchemy.url', database_url)
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
