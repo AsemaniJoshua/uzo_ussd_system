@@ -1,10 +1,11 @@
-
 import sys
 import os
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
+# Add the project root to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Load .env variables automatically
 from dotenv import load_dotenv
@@ -14,7 +15,7 @@ from app.core.config import settings
 
 # Programmatic SSH Tunnel for migrations
 tunnel = None
-db_port = 5522 # Default MySQL port
+db_port = 3306 # Default MySQL port
 
 if settings.SSH_HOST:
     from sshtunnel import SSHTunnelForwarder
@@ -24,9 +25,11 @@ if settings.SSH_HOST:
         ssh_username=settings.SSH_USER,
         ssh_password=settings.SSH_PASSWORD,
         remote_bind_address=('127.0.0.1', 3306),
-        local_bind_address=('127.0.0.1', 10022),
+        local_bind_address=('127.0.0.1', 5522),
     )
     tunnel.start()
+    import time
+    time.sleep(1)
     db_port = tunnel.local_bind_port
     print(f"Tunnel active on port {db_port}")
 
@@ -49,7 +52,6 @@ else:
 config = context.config
 config.set_main_option('sqlalchemy.url', database_url)
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app.db.base import Base
 from app.models import orm_models  # ensure models are imported
 from app.core.config import settings

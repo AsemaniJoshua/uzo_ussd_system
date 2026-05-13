@@ -36,10 +36,11 @@ class DatabaseManager:
                 ssh_username=settings.SSH_USER,
                 ssh_password=settings.SSH_PASSWORD,
                 remote_bind_address=('127.0.0.1', 3306),
-                local_bind_address=('127.0.0.1', 10022),
+                local_bind_address=('127.0.0.1', 5522),
                 set_keepalive=60.0,
             )
             self._tunnel.start()
+            time.sleep(1)
             logger.info(f"SSH tunnel established on local port: {self._tunnel.local_bind_port}")
         except Exception as e:
             logger.error(f"Failed to establish SSH tunnel: {e}")
