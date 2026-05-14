@@ -13,34 +13,34 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 from app.core.config import settings
 
-# Programmatic SSH Tunnel for migrations
-tunnel = None
-db_port = 3306 # Default MySQL port
+# --- DIRECT CONNECTION FOR MIGRATIONS (Active) ---
+database_url = settings.DATABASE_URL
+if 'aiomysql' in database_url:
+    database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
 
-if settings.SSH_HOST:
-    from sshtunnel import SSHTunnelForwarder
-    print(f"Establishing SSH tunnel for migrations to {settings.SSH_HOST}...")
-    tunnel = SSHTunnelForwarder(
-        (settings.SSH_HOST, settings.SSH_PORT),
-        ssh_username=settings.SSH_USER,
-        ssh_password=settings.SSH_PASSWORD,
-        remote_bind_address=('127.0.0.1', 3306),
-        local_bind_address=('127.0.0.1', 5522),
-    )
-    tunnel.start()
-    import time
-    time.sleep(1)
-    db_port = tunnel.local_bind_port
-    print(f"Tunnel active on port {db_port}")
-
-# Construct synchronous URL for migrations
-if settings.DATABASE_URL:
-    database_url = settings.DATABASE_URL
-    if 'aiomysql' in database_url:
-        database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
-else:
-    # Build from components
-    database_url = f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@127.0.0.1:{db_port}/{settings.DB_NAME}"
+# --- PROGRAMMATIC SSH TUNNEL (Commented Out) ---
+# tunnel = None
+# db_port = 3306 
+# if settings.SSH_HOST:
+#     from sshtunnel import SSHTunnelForwarder
+#     tunnel = SSHTunnelForwarder(
+#         (settings.SSH_HOST, settings.SSH_PORT),
+#         ssh_username=settings.SSH_USER,
+#         ssh_password=settings.SSH_PASSWORD,
+#         remote_bind_address=('127.0.0.1', 3306),
+#         local_bind_address=('127.0.0.1', 5522),
+#     )
+#     tunnel.start()
+#     import time
+#     time.sleep(1)
+#     db_port = tunnel.local_bind_port
+#
+# if settings.DATABASE_URL:
+#     database_url = settings.DATABASE_URL
+#     if 'aiomysql' in database_url:
+#         database_url = database_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
+# else:
+#     database_url = f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@127.0.0.1:{db_port}/{settings.DB_NAME}"
 
 # --- ORIGINAL MIGRATION CONFIG (Commented Out) ---
 # # Convert async DATABASE_URL to sync for migrations
