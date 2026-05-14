@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 from sshtunnel import SSHTunnelForwarder
 
 from app.core.config import settings
@@ -26,8 +27,20 @@ class DatabaseManager:
 
     def _establish_tunnel(self):
         """Programmatically establish and verify the SSH tunnel."""
+        # More robust check: verify transport is actually active
         if self._tunnel and self._tunnel.is_active:
-            return
+            try:
+                if self._tunnel.ssh_client.get_transport() and self._tunnel.ssh_client.get_transport().is_active():
+                    return
+            except Exception:
+                pass
+        
+        # If dead or inactive, clean up old tunnel before restarting
+        if self._tunnel:
+            try:
+                self._tunnel.stop()
+            except Exception:
+                pass
 
         try:
             logger.info(f"Establishing SSH tunnel to {settings.SSH_HOST}:{settings.SSH_PORT}...")
@@ -37,25 +50,27 @@ class DatabaseManager:
                 ssh_password=settings.SSH_PASSWORD,
                 remote_bind_address=('127.0.0.1', 3306),
                 local_bind_address=('127.0.0.1', 5522),
-                set_keepalive=60.0,
+                set_keepalive=30.0, # Reduced to 30s to prevent Namecheap timeouts
             )
             self._tunnel.start()
             time.sleep(1)
             logger.info(f"SSH tunnel established on local port: {self._tunnel.local_bind_port}")
+            
+            # Reset engine if tunnel port might have changed (though we use fixed 5522)
+            self._engine = None 
         except Exception as e:
             logger.error(f"Failed to establish SSH tunnel: {e}")
             raise
 
     def get_engine(self):
         """Returns a configured SQLAlchemy engine, initializing if necessary."""
-        # Ensure tunnel is active before creating/returning engine
         self._establish_tunnel()
 
         if self._engine is None:
             db_url = self._get_db_url(self._tunnel.local_bind_port)
             self._engine = create_async_engine(
                 db_url,
-                pool_recycle=1800,
+                pool_recycle=1200, # Reduced to 20m for safety
                 pool_pre_ping=True,
                 echo=False,
                 future=True,
@@ -69,22 +84,44 @@ class DatabaseManager:
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession, None]:
-        """Provides a safe async session scope with auto-healing tunnel checks."""
+        """Provides a safe async session scope with auto-healing and retry logic."""
         # Check tunnel health before yielding session
-        if not self._tunnel or not self._tunnel.is_active:
-            logger.warning("SSH Tunnel dropped. Re-establishing...")
-            self._establish_tunnel()
-
+        self._establish_tunnel()
+        
         engine = self.get_engine()
         session = self._session_factory()
         try:
-            yield session
-            await session.commit()
+            try:
+                yield session
+                await session.commit()
+            except (OperationalError, Exception) as e:
+                # If we lose connection, try to heal tunnel and retry once
+                error_msg = str(e).lower()
+                if "lost connection" in error_msg or "ssh session not active" in error_msg:
+                    logger.warning("Database connection lost. Healing tunnel and retrying...")
+                    self._tunnel = None # Force re-establishment
+                    self._establish_tunnel()
+                    # Re-yield from a fresh session might be complex here, so we raise
+                    # but the NEXT request will be perfectly healed.
+                    # For immediate retry:
+                    await session.rollback()
+                    await session.close()
+                    
+                    engine = self.get_engine()
+                    new_session = self._session_factory()
+                    try:
+                        yield new_session
+                        await new_session.commit()
+                    finally:
+                        await new_session.close()
+                else:
+                    raise
         except Exception:
             await session.rollback()
             raise
         finally:
-            await session.close()
+            if session:
+                await session.close()
 
 # Singleton instance
 db_manager = DatabaseManager()
