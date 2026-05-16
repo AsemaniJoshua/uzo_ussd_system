@@ -12,8 +12,9 @@ class PackageRepository:
         """Fetch packages using the standard SQLAlchemy filter that was working for MTN."""
         stmt = select(Package)
         if network:
-            # We use the raw network object here, as it worked for MTN previously
-            stmt = stmt.where(Package.network == network)
+            # Broad search to catch Enum, UPPERCASE, and lowercase matches
+            val = network.value if hasattr(network, 'value') else str(network)
+            stmt = stmt.where(Package.network.in_([network, val, val.upper(), val.lower()]))
         
         q = await self.db.execute(stmt)
         return q.scalars().all()
