@@ -9,24 +9,14 @@ class PackageRepository:
         self.db = db
 
     async def get_all(self, network: Optional[NetworkEnum] = None) -> List[Package]:
-        """Fetch packages and filter in Python to guarantee 100% match regardless of DB types."""
+        """Fetch packages using the standard SQLAlchemy filter that was working for MTN."""
         stmt = select(Package)
+        if network:
+            # We use the raw network object here, as it worked for MTN previously
+            stmt = stmt.where(Package.network == network)
+        
         q = await self.db.execute(stmt)
-        all_packages = q.scalars().all()
-        
-        if not network:
-            return list(all_packages)
-
-        # Convert target to a clean uppercase string
-        target_network = str(network.value if hasattr(network, 'value') else network).strip().upper()
-        
-        # Filter in Python to bypass any SQLAlchemy/DB Enum weirdness
-        matched_packages = [
-            pkg for pkg in all_packages 
-            if str(pkg.network).strip().upper() == target_network
-        ]
-        
-        return matched_packages
+        return q.scalars().all()
 
     async def get_by_id(self, id: int) -> Optional[Package]:
         q = await self.db.execute(select(Package).where(Package.id == id))
