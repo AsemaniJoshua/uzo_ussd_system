@@ -38,6 +38,7 @@ export const apiClient = {
       const params = new URLSearchParams()
       params.append('username', credentials.username)
       params.append('password', credentials.password)
+      // Matches @router.post("/token")
       const response = await api.post('/api/admin/token', params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -48,11 +49,13 @@ export const apiClient = {
       }
       return response.data
     },
-    createAdmin: async (data: AdminCreate): Promise<AdminUser> => {
+    createAdmin: async (data: { username: string; password: string; role?: string }): Promise<any> => {
+      // Matches @router.post("/create")
       const response = await api.post('/api/admin/create', data)
       return response.data
     },
     updatePassword: async (data: { current_password: string; new_password: string }): Promise<any> => {
+      // Matches @router.put("/update-password")
       const response = await api.put('/api/admin/update-password', data)
       return response.data
     },
@@ -62,27 +65,27 @@ export const apiClient = {
   packages: {
     list: async (network?: NetworkEnum): Promise<Package[]> => {
       const params = network ? { network } : {}
-      // HAS TRAILING SLASH per backend @router.get("/")
+      // Matches @router.get("/") in packages.py with prefix /packages
       const response = await api.get('/api/packages/', { params })
       return response.data
     },
     get: async (id: number): Promise<Package> => {
-      // NO TRAILING SLASH per backend @router.get("/{package_id}")
+      // Matches @router.get("/{package_id}")
       const response = await api.get(`/api/packages/${id}`)
       return response.data
     },
     create: async (data: PackageCreate): Promise<Package> => {
-      // HAS TRAILING SLASH per backend @router.post("/")
+      // Matches @router.post("/") in packages.py
       const response = await api.post('/api/packages/', data)
       return response.data
     },
     update: async (id: number, data: PackageUpdate): Promise<Package> => {
-      // NO TRAILING SLASH per backend @router.put("/{package_id}")
+      // Matches @router.put("/{package_id}")
       const response = await api.put(`/api/packages/${id}`, data)
       return response.data
     },
     delete: async (id: number): Promise<void> => {
-      // NO TRAILING SLASH per backend @router.delete("/{package_id}")
+      // Matches @router.delete("/{package_id}")
       await api.delete(`/api/packages/${id}`)
     },
   },
@@ -90,27 +93,31 @@ export const apiClient = {
   // Transactions
   transactions: {
     list: async (skip: number = 0, limit: number = 100): Promise<Transaction[]> => {
-      // NO TRAILING SLASH per backend @router.get("/requests")
+      // Matches @router.get("/requests")
       const response = await api.get('/api/admin/requests', {
         params: { skip, limit },
       })
       return response.data
     },
     serve: async (id: number): Promise<any> => {
+      // Matches @router.post("/requests/{request_id}/serve")
       const response = await api.post(`/api/admin/requests/${id}/serve`)
       return response.data
     },
     listServed: async (skip: number = 0, limit: number = 100): Promise<any[]> => {
+      // Matches @router.get("/served")
       const response = await api.get('/api/admin/served', {
         params: { skip, limit },
       })
       return response.data
     },
     unserve: async (id: number): Promise<Transaction> => {
+      // Matches @router.post("/served/{served_id}/unserve")
       const response = await api.post(`/api/admin/served/${id}/unserve`)
       return response.data
     },
     deleteServed: async (id: number): Promise<any> => {
+      // Matches @router.delete("/served/{served_id}")
       const response = await api.delete(`/api/admin/served/${id}`)
       return response.data
     },
@@ -119,16 +126,19 @@ export const apiClient = {
   // Admin Management
   admins: {
     list: async (skip: number = 0, limit: number = 100): Promise<any[]> => {
+      // Matches @router.get("/admins")
       const response = await api.get('/api/admin/admins', {
         params: { skip, limit },
       })
       return response.data
     },
     create: async (data: { username: string; password: string; role?: string }): Promise<any> => {
+      // Matches @router.post("/create")
       const response = await api.post('/api/admin/create', data)
       return response.data
     },
     delete: async (username: string): Promise<any> => {
+      // Matches @router.delete("/admins/{username}")
       const response = await api.delete(`/api/admin/admins/${username}`)
       return response.data
     },
@@ -137,10 +147,12 @@ export const apiClient = {
   // Settings
   settings: {
     get: async (): Promise<any> => {
+      // Matches @router.get("/settings")
       const response = await api.get('/api/admin/settings')
       return response.data
     },
     updateUssdRestriction: async (restricted: boolean): Promise<any> => {
+      // Matches @router.put("/settings/ussd-restriction")
       const response = await api.put('/api/admin/settings/ussd-restriction', null, {
         params: { restricted }
       })
@@ -165,6 +177,7 @@ export const apiClient = {
   // Whitelist
   whitelist: {
     upload: async (formData: FormData): Promise<any> => {
+      // Matches @router.post("/whitelist/upload")
       const response = await api.post('/api/admin/whitelist/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
