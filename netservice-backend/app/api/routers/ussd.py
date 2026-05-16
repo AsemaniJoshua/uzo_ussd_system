@@ -445,7 +445,8 @@ async def ussd_callback(
                 session['current_page'] = 1
                 ussd_sessions[session_id] = session
                 async for db in get_session():
-                    packages_menu = await get_packages_menu(NetworkEnum.AT, db, page=session['current_page'])
+                    # Changed to use session['network'] to match MTN logic
+                    packages_menu = await get_packages_menu(session['network'], db, page=session['current_page'])
                     return UzoUSSDResponse(message=packages_menu, ussdServiceOp=2).model_dump()
             elif user_input == "3":  # Telecel
                 session['stage'] = USSDState.PACKAGE_SELECT
@@ -453,7 +454,8 @@ async def ussd_callback(
                 session['current_page'] = 1
                 ussd_sessions[session_id] = session
                 async for db in get_session():
-                    packages_menu = await get_packages_menu(NetworkEnum.TELECEL, db, page=session['current_page'])
+                    # Changed to use session['network'] to match MTN logic
+                    packages_menu = await get_packages_menu(session['network'], db, page=session['current_page'])
                     return UzoUSSDResponse(message=packages_menu, ussdServiceOp=2).model_dump()
             else:
                 return UzoUSSDResponse(message="Invalid network. Select 1-3.", ussdServiceOp=2).model_dump()
