@@ -9,11 +9,13 @@ class PackageRepository:
         self.db = db
 
     async def get_all(self, network: Optional[NetworkEnum] = None) -> List[Package]:
+        from sqlalchemy import func, cast, String
         stmt = select(Package)
         if network:
-            # Use the string value to avoid Enum class mismatch issues
-            val = network.value if hasattr(network, 'value') else str(network)
-            stmt = stmt.where(Package.network == val)
+            # 100% Robust check: Convert both sides to uppercase strings
+            val = str(network.value if hasattr(network, 'value') else network).strip().upper()
+            stmt = stmt.where(func.upper(cast(Package.network, String)) == val)
+        
         q = await self.db.execute(stmt)
         return q.scalars().all()
 
