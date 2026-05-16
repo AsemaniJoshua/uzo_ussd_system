@@ -11,7 +11,9 @@ class PackageRepository:
     async def get_all(self, network: Optional[NetworkEnum] = None) -> List[Package]:
         stmt = select(Package)
         if network:
-            stmt = stmt.where(Package.network == network)
+            # Use the string value to avoid Enum class mismatch issues
+            val = network.value if hasattr(network, 'value') else str(network)
+            stmt = stmt.where(Package.network == val)
         q = await self.db.execute(stmt)
         return q.scalars().all()
 
