@@ -1,11 +1,9 @@
 # app/services/ussd_service.py
 from fastapi import Form
-from typing import Tuple
-
-# Build the USSD menu flow based on the user's requested logic
-# This service only returns the string response (CON/END + message)
-
-## Packages will now be loaded from the database, not hardcoded here.
+from typing import Tuple, Optional
+import asyncio
+from app.repositories.package_repo import PackageRepository
+from app.schemas.package_schemas import NetworkEnum
 
 async def generate_main_menu():
     return "Welcome to NetService NT: The Data is NOT INSTANT. It takes between 1min to 5mins to deliver\n\n1. Buy Data bundle\n2. Contact Support"
@@ -16,13 +14,8 @@ def contact_support_text():
 def select_network_menu():
     return "Select Network\n1. MTN\n2. AT\n3. Telecel"
 
-import asyncio
-from app.repositories.package_repo import PackageRepository
-from app.schemas.package_schemas import NetworkEnum
-
 async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     """Display packages for any network with pagination"""
-    # Ensure we use the string value of the network for the query
     network_str = network.value if hasattr(network, 'value') else str(network)
     text = f"{network_str} Data P{page}\n"
     
@@ -34,22 +27,12 @@ async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
         close_db = True
     
     repo = PackageRepository(db)
-    # Fetch ALL packages from the database to bypass the failing DB filter
-    all_packages = await repo.get_all(None)
-    
-    # Use clean string matching in Python
-    target_network = str(network.value if hasattr(network, 'value') else network).strip().upper()
-    
-    # Filter for the correct network AND active status
-    packages = [
-        pkg for pkg in all_packages 
-        if str(pkg.network).strip().upper() == target_network and pkg.active == 1
-    ]
+    packages = await repo.get_all(network)
     
     if not packages:
         if close_db:
             await db.close()
-        return f"No {target_network} packages available."
+        return f"No {network_str} packages available."
     
     # Calculate pagination
     start_idx = (page - 1) * page_size
@@ -88,4 +71,3 @@ def confirm_menu(package_name: str, amount: str, recipient: str):
 
 def final_payment_message():
     return "Payment initiated! Approve the MoMo prompt. Bundle will be delivered within 1mins to 5mins.Dial *170# if payment prompt delays or fails to show."
-
