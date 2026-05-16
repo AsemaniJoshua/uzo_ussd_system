@@ -64,50 +64,50 @@ export const apiClient = {
   packages: {
     list: async (network?: NetworkEnum): Promise<Package[]> => {
       const params = network ? { network } : {}
-      const response = await api.get('/api/packages', { params })
+      const response = await api.get('/api/packages/', { params })
       return response.data
     },
     get: async (id: number): Promise<Package> => {
-      const response = await api.get(`/api/packages/${id}`)
+      const response = await api.get(`/api/packages/${id}/`)
       return response.data
     },
     create: async (data: PackageCreate): Promise<Package> => {
-      const response = await api.post('/api/packages', data)
+      const response = await api.post('/api/packages/', data)
       return response.data
     },
     update: async (id: number, data: PackageUpdate): Promise<Package> => {
-      const response = await api.put(`/api/packages/${id}`, data)
+      const response = await api.put(`/api/packages/${id}/`, data)
       return response.data
     },
     delete: async (id: number): Promise<void> => {
-      await api.delete(`/api/packages/${id}`)
+      await api.delete(`/api/packages/${id}/`)
     },
   },
 
   // Transactions
   transactions: {
     list: async (skip: number = 0, limit: number = 100): Promise<Transaction[]> => {
-      const response = await api.get('/api/admin/requests', {
+      const response = await api.get('/api/admin/requests/', {
         params: { skip, limit },
       })
       return response.data
     },
     serve: async (id: number): Promise<any> => {
-      const response = await api.post(`/api/admin/requests/${id}/serve`)
+      const response = await api.post(`/api/admin/requests/${id}/serve/`)
       return response.data
     },
     listServed: async (skip: number = 0, limit: number = 100): Promise<any[]> => {
-      const response = await api.get('/api/admin/served', {
+      const response = await api.get('/api/admin/served/', {
         params: { skip, limit },
       })
       return response.data
     },
     unserve: async (id: number): Promise<Transaction> => {
-      const response = await api.post(`/api/admin/served/${id}/unserve`)
+      const response = await api.post(`/api/admin/served/${id}/unserve/`)
       return response.data
     },
     deleteServed: async (id: number): Promise<any> => {
-      const response = await api.delete(`/api/admin/served/${id}`)
+      const response = await api.delete(`/api/admin/served/${id}/`)
       return response.data
     },
   },
@@ -115,17 +115,17 @@ export const apiClient = {
   // Admin Management
   admins: {
     list: async (skip: number = 0, limit: number = 100): Promise<any[]> => {
-      const response = await api.get('/api/admin/admins', {
+      const response = await api.get('/api/admin/admins/', {
         params: { skip, limit },
       })
       return response.data
     },
     create: async (data: { username: string; password: string; role?: string }): Promise<any> => {
-      const response = await api.post('/api/admin/create', data)
+      const response = await api.post('/api/admin/create/', data)
       return response.data
     },
     delete: async (username: string): Promise<any> => {
-      const response = await api.delete(`/api/admin/admins/${username}`)
+      const response = await api.delete(`/api/admin/admins/${username}/`)
       return response.data
     },
   },
@@ -133,11 +133,11 @@ export const apiClient = {
   // Settings
   settings: {
     get: async (): Promise<any> => {
-      const response = await api.get('/api/admin/settings')
+      const response = await api.get('/api/admin/settings/')
       return response.data
     },
     updateUssdRestriction: async (restricted: boolean): Promise<any> => {
-      const response = await api.put('/api/admin/settings/ussd-restriction', null, {
+      const response = await api.put('/api/admin/settings/ussd-restriction/', null, {
         params: { restricted }
       })
       return response.data
@@ -161,7 +161,7 @@ export const apiClient = {
   // Whitelist
   whitelist: {
     upload: async (formData: FormData): Promise<any> => {
-      const response = await api.post('/api/admin/whitelist/upload', formData, {
+      const response = await api.post('/api/admin/whitelist/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
