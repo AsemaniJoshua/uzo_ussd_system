@@ -34,15 +34,22 @@ async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
         close_db = True
     
     repo = PackageRepository(db)
-    all_packages = await repo.get_all(network)
+    # Fetch ALL packages from the database to bypass the failing DB filter
+    all_packages = await repo.get_all(None)
     
-    # FILTER FOR ACTIVE PACKAGES ONLY
-    packages = [pkg for pkg in all_packages if pkg.active == 1]
+    # Use clean string matching in Python
+    target_network = str(network.value if hasattr(network, 'value') else network).strip().upper()
+    
+    # Filter for the correct network AND active status
+    packages = [
+        pkg for pkg in all_packages 
+        if str(pkg.network).strip().upper() == target_network and pkg.active == 1
+    ]
     
     if not packages:
         if close_db:
             await db.close()
-        return f"No {network_str} packages available."
+        return f"No {target_network} packages available."
     
     # Calculate pagination
     start_idx = (page - 1) * page_size
