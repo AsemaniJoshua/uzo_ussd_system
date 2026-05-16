@@ -22,22 +22,27 @@ from app.schemas.package_schemas import NetworkEnum
 
 async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     """Display packages for any network with pagination"""
-    network_name = network.value if hasattr(network, 'value') else str(network)
-    text = f"{network_name} Data P{page}\n"
+    # Ensure we use the string value of the network for the query
+    network_str = network.value if hasattr(network, 'value') else str(network)
+    text = f"{network_str} Data P{page}\n"
+    
     close_db = False
     if db is None:
-        # If no db session is provided, create one (for direct calls/testing)
         from app.db.session import engine
         from sqlalchemy.ext.asyncio import AsyncSession
         db = AsyncSession(engine)
         close_db = True
     
     repo = PackageRepository(db)
-    packages = await repo.get_all(network)
+    all_packages = await repo.get_all(network)
+    
+    # FILTER FOR ACTIVE PACKAGES ONLY
+    packages = [pkg for pkg in all_packages if pkg.active == 1]
+    
     if not packages:
         if close_db:
             await db.close()
-        return "No data available"
+        return f"No {network_str} packages available."
     
     # Calculate pagination
     start_idx = (page - 1) * page_size
