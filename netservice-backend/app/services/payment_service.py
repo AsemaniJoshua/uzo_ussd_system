@@ -102,6 +102,10 @@ class PaymentService:
             await self.repo.update_status_by_ref(tx_id, "PAID")
             logger.info(f"Transaction {tx_id} marked as PAID")
             print(f"Transaction {tx_id} marked as PAID")
+        elif (status and status.lower() in ("pending", "processing")) or code == "101" or "pending" in reason.lower():
+            await self.repo.update_status_by_ref(tx_id, "PENDING")
+            logger.info(f"Transaction {tx_id} status remains PENDING")
+            print(f"Transaction {tx_id} status remains PENDING")
         elif code == "112" or "incorrect pin" in reason.lower() or "wrong pin" in reason.lower():
             await self.repo.update_status_by_ref(tx_id, "FAILED")
             logger.warning(f"Transaction {tx_id} failed - Incorrect PIN")
@@ -146,6 +150,9 @@ class PaymentService:
         if code == "000" or (status in ("approved", "successful", "success", "paid", "completed")):
             await self.repo.update_status_by_ref(transaction_id, "PAID")
             print(f"Transaction {transaction_id} verified and updated to PAID")
+        elif status in ("pending", "processing") or code == "101" or "pending" in result.get("reason", "").lower():
+            await self.repo.update_status_by_ref(transaction_id, "PENDING")
+            print(f"Transaction {transaction_id} verified and remains PENDING")
         else:
             await self.repo.update_status_by_ref(transaction_id, "FAILED")
             print(f"Transaction {transaction_id} verified and updated to FAILED")
