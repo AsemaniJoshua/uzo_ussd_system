@@ -107,11 +107,13 @@ class PaymentService:
         )
         
         is_pending = (
-            status_lower in ("pending", "processing", "ambiguous") or
-            code in ("100", "101") or
-            "pending" in reason_lower or
-            "initiated" in reason_lower or
-            "processing" in reason_lower
+            (status_lower in ("pending", "processing", "ambiguous") or
+             code in ("100", "101") or
+             "pending" in reason_lower or
+             "initiated" in reason_lower or
+             "processing" in reason_lower)
+            and status_lower != "failed"
+            and "failed" not in reason_lower
         )
         
         if is_success:
@@ -167,11 +169,13 @@ class PaymentService:
         )
         
         is_pending = (
-            status_lower in ("pending", "processing", "ambiguous") or
-            code in ("100", "101") or
-            "pending" in reason_lower or
-            "initiated" in reason_lower or
-            "processing" in reason_lower
+            (status_lower in ("pending", "processing", "ambiguous") or
+             code in ("100", "101") or
+             "pending" in reason_lower or
+             "initiated" in reason_lower or
+             "processing" in reason_lower)
+            and status_lower != "failed"
+            and "failed" not in reason_lower
         )
         
         # TheTeller's primary success indicator is code '000'
@@ -185,5 +189,6 @@ class PaymentService:
             await self.repo.update_status_by_ref(transaction_id, "FAILED")
             print(f"Transaction {transaction_id} verified and updated to FAILED")
         return result
+
 
 
