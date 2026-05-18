@@ -98,23 +98,39 @@ class PaymentService:
         
         # Update transaction status
         # TheTeller's primary success indicator is code '000'
-        if code == "000" or (status and status.lower() in ("success", "paid", "completed", "approved", "successful")):
+        status_lower = status.lower() if status else ""
+        reason_lower = reason.lower() if reason else ""
+        
+        is_success = (
+            code == "000" or 
+            status_lower in ("success", "paid", "completed", "approved", "successful")
+        )
+        
+        is_pending = (
+            status_lower in ("pending", "processing", "ambiguous") or
+            code in ("100", "101") or
+            "pending" in reason_lower or
+            "initiated" in reason_lower or
+            "processing" in reason_lower
+        )
+        
+        if is_success:
             await self.repo.update_status_by_ref(tx_id, "PAID")
             logger.info(f"Transaction {tx_id} marked as PAID")
             print(f"Transaction {tx_id} marked as PAID")
-        elif (status and status.lower() in ("pending", "processing")) or code == "101" or "pending" in reason.lower():
+        elif is_pending:
             await self.repo.update_status_by_ref(tx_id, "PENDING")
             logger.info(f"Transaction {tx_id} status remains PENDING")
             print(f"Transaction {tx_id} status remains PENDING")
-        elif code == "112" or "incorrect pin" in reason.lower() or "wrong pin" in reason.lower():
+        elif code == "112" or "incorrect pin" in reason_lower or "wrong pin" in reason_lower:
             await self.repo.update_status_by_ref(tx_id, "FAILED")
             logger.warning(f"Transaction {tx_id} failed - Incorrect PIN")
             print(f"Transaction {tx_id} failed - Incorrect PIN")
-        elif code == "111" or "insufficient" in reason.lower():
+        elif code == "111" or "insufficient" in reason_lower:
             await self.repo.update_status_by_ref(tx_id, "FAILED")
             logger.warning(f"Transaction {tx_id} failed - Insufficient balance")
             print(f"Transaction {tx_id} failed - Insufficient balance")
-        elif code == "114" or "cancel" in reason.lower():
+        elif code == "114" or "cancel" in reason_lower:
             await self.repo.update_status_by_ref(tx_id, "FAILED")
             logger.warning(f"Transaction {tx_id} cancelled by user")
             print(f"Transaction {tx_id} cancelled by user")
@@ -140,21 +156,34 @@ class PaymentService:
         #   "transaction_id": "000000000267",
         #   ...
         # }
-        status = result.get("status")
-        if status is None:
-            status = ""
-        status = status.lower()
+        status = result.get("status", "")
+        status_lower = status.lower() if status else ""
         code = result.get("code", "")
+        reason_lower = result.get("reason", "").lower() if result.get("reason") else ""
+        
+        is_success = (
+            code == "000" or 
+            status_lower in ("approved", "successful", "success", "paid", "completed")
+        )
+        
+        is_pending = (
+            status_lower in ("pending", "processing", "ambiguous") or
+            code in ("100", "101") or
+            "pending" in reason_lower or
+            "initiated" in reason_lower or
+            "processing" in reason_lower
+        )
         
         # TheTeller's primary success indicator is code '000'
-        if code == "000" or (status in ("approved", "successful", "success", "paid", "completed")):
+        if is_success:
             await self.repo.update_status_by_ref(transaction_id, "PAID")
             print(f"Transaction {transaction_id} verified and updated to PAID")
-        elif status in ("pending", "processing") or code == "101" or "pending" in result.get("reason", "").lower():
+        elif is_pending:
             await self.repo.update_status_by_ref(transaction_id, "PENDING")
             print(f"Transaction {transaction_id} verified and remains PENDING")
         else:
             await self.repo.update_status_by_ref(transaction_id, "FAILED")
             print(f"Transaction {transaction_id} verified and updated to FAILED")
         return result
+
 
