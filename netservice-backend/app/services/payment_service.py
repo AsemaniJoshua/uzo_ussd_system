@@ -91,7 +91,8 @@ class PaymentService:
         logger.info(f"Webhook received - TX: {tx_id}, Status: {status}, Code: {code}, Reason: {reason}")
         
         # Update transaction status
-        if status and status.lower() in ("success", "paid", "completed", "approved", "successful"):
+        # TheTeller's primary success indicator is code '000'
+        if code == "000" or (status and status.lower() in ("success", "paid", "completed", "approved", "successful")):
             await self.repo.update_status_by_ref(tx_id, "PAID")
             logger.info(f"Transaction {tx_id} marked as PAID")
         elif code == "112" or "incorrect pin" in reason.lower() or "wrong pin" in reason.lower():

@@ -90,7 +90,8 @@ async def initiate_mobile_money(amount_ghs: float, phone: str, tx_id: str, desc:
     payload = {
         "merchant_id": settings.THETELLER_MERCHANT_ID,
         "r-switch": r_switch,
-        "amount": str(float(amount_ghs)),  # decimal string, not padded
+        # "amount": str(float(amount_ghs)),  # decimal string, not padded
+        "amount": _format_amount(amount_ghs), # Padded to 12 zeros (in pesewas)
         "processing_code": "000200",
         "transaction_id": str(tx_id),
         "callback_url": getattr(settings, "THETELLER_CALLBACK_URL", ""),
