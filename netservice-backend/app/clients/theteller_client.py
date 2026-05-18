@@ -134,6 +134,7 @@ async def verify_payment(transaction_id: str):
     """
     url = f"{BASE}/v1.1/users/transactions/{_format_tx_id(transaction_id)}/status"
     headers = {
+        "Authorization": _theteller_auth_header(),
         "Content-Type": "application/json",
         "Merchant-Id": settings.THETELLER_MERCHANT_ID,
         "Cache-Control": "no-cache"

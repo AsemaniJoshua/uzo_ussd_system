@@ -36,12 +36,27 @@ class TransactionRepository:
         return q.scalars().all()
 
     async def update_status_by_ref(self, ref: str, status: str):
-        q = await self.db.execute(select(Transaction).where(Transaction.payment_reference == ref))
+        # Handle both zero-padded and non-padded references, and support numeric fallback
+        ref_str = str(ref).strip()
+        ref_padded = ref_str.zfill(12)
+        
+        conditions = [
+            Transaction.payment_reference == ref_str,
+            Transaction.payment_reference == ref_padded
+        ]
+        
+        if ref_str.isdigit():
+            conditions.append(Transaction.id == int(ref_str))
+            
+        q = await self.db.execute(select(Transaction).where(or_(*conditions)))
         obj = q.scalars().first()
         if obj:
             obj.status = status
             await self.db.commit()
             await self.db.refresh(obj)
+            print(f"[Repo] Successfully updated transaction ID {obj.id} (ref={obj.payment_reference}) status to {status}")
+        else:
+            print(f"[Repo] WARNING: No transaction found matching reference '{ref_str}' or '{ref_padded}'")
         return obj
 
     async def move_to_served(self, tx: Transaction, processed_by: str | None = None):
