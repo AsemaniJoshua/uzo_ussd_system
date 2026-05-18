@@ -46,11 +46,15 @@ class PaymentService:
             print(f"TheTeller response: {resp}")
             
             # Update transaction status based on response
-            status = resp.get("status", "").lower()
+            status = resp.get("status")
+            if status is None:
+                status = ""
+            status = status.lower()
             code = resp.get("code", "")
+            
             if status in ("approved", "successful", "success") and code == "000":
                 tx.status = "PAID"
-            elif status in ("pending", "processing"):
+            elif status in ("pending", "processing") or code == "000" or resp.get("reason", "") == "request received successfully":
                 tx.status = "PENDING"
             else:
                 tx.status = "FAILED"
@@ -125,9 +129,14 @@ class PaymentService:
         #   "transaction_id": "000000000267",
         #   ...
         # }
-        status = result.get("status", "").lower()
+        status = result.get("status")
+        if status is None:
+            status = ""
+        status = status.lower()
         code = result.get("code", "")
-        if status in ("approved", "successful", "success", "paid", "completed") and code == "000":
+        
+        # TheTeller's primary success indicator is code '000'
+        if code == "000" or (status in ("approved", "successful", "success", "paid", "completed")):
             await self.repo.update_status_by_ref(transaction_id, "PAID")
         else:
             await self.repo.update_status_by_ref(transaction_id, "FAILED")
