@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isServing, setIsServing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
 
   useEffect(() => {
     fetchDashboardData()
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     filterTransactions()
-  }, [recentTransactions, searchTerm])
+  }, [recentTransactions, searchTerm, dateFilter])
 
   const fetchDashboardData = async () => {
     try {
@@ -102,17 +103,31 @@ export default function AdminDashboard() {
   const handleExportCSV = (date: string, transactions: Transaction[]) => {
     try {
       const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date', 'Time']
-      const csvData = transactions.map(tx => [
-        // tx.id,
-        `="${tx.user_msisdn}"`, // Force Excel to treat as text using formula prefix
-        `="${tx.package_name}"`,
-        tx.network,
-        `="${tx.recipient}"`, // Force Excel to treat as text using formula prefix
-        tx.amount,
-        tx.status,
-        new Date(tx.created_at).toLocaleDateString(),
-        new Date(tx.created_at).toLocaleTimeString()
-      ])
+      const csvData = transactions.map(tx => {
+        // Format recipient to 9 digits
+        let recipient9 = tx.recipient || '';
+        if (recipient9.startsWith('233') && recipient9.length === 12) {
+          recipient9 = recipient9.slice(3);
+        } else if (recipient9.startsWith('0') && recipient9.length === 10) {
+          recipient9 = recipient9.slice(1);
+        } else if (recipient9.length >= 9) {
+          recipient9 = recipient9.slice(-9);
+        }
+        
+        // Remove 'GB' or 'gb' from package name
+        const packageNoGB = tx.package_name ? tx.package_name.replace(/GB/gi, '').trim() : '';
+
+        return [
+          `="${tx.user_msisdn}"`, // Force Excel to treat as text using formula prefix
+          `="${packageNoGB}"`,
+          tx.network,
+          `="${recipient9}"`, // Force Excel to treat as text using formula prefix
+          tx.amount,
+          tx.status,
+          new Date(tx.created_at).toLocaleDateString(),
+          new Date(tx.created_at).toLocaleTimeString()
+        ];
+      })
 
       const csvContent = [
         headers.join(','),
@@ -150,6 +165,15 @@ export default function AdminDashboard() {
         tx.package_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.id.toString().includes(searchTerm)
       )
+    }
+
+    if (dateFilter) {
+      filtered = filtered.filter(tx => {
+        // Match the local date string portion (YYYY-MM-DD)
+        const txDate = new Date(tx.created_at);
+        const txDateString = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}-${String(txDate.getDate()).padStart(2, '0')}`;
+        return txDateString === dateFilter;
+      })
     }
 
     setFilteredTransactions(filtered)
@@ -249,15 +273,26 @@ export default function AdminDashboard() {
 
           {/* Search Filter */}
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by phone, package, or ID..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search by phone, package, or ID..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="md:w-64">
+                <input
+                  type="date"
+                  className="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  title="Filter by date"
+                />
+              </div>
             </div>
           </div>
 
