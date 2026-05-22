@@ -20,8 +20,10 @@ class PaymentService:
         if not tx:
             raise ValueError("Transaction not found")
         
-        # Use transaction_id as TheTeller transaction_id
-        tx_id = str(tx.id).zfill(12)
+        import random
+        # Generate a unique 12-digit transaction ID to avoid TheTeller duplicates
+        # We use random.randint to ensure it stays strictly numeric (12 digits)
+        tx_id = str(random.randint(100000000000, 999999999999))
         desc = f"Data Bundle: {tx.package_name}"
         
         # Get network string for TheTeller
