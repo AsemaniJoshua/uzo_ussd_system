@@ -102,7 +102,8 @@ export default function AdminDashboard() {
 
   const handleExportCSV = (date: string, transactions: Transaction[]) => {
     try {
-      const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date', 'Time']
+      // const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date', 'Time']
+      const headers = ['Package', 'Network', 'Recipient']
       const csvData = transactions.map(tx => {
         // Format recipient to 9 digits
         let recipient9 = tx.recipient || '';
@@ -118,14 +119,14 @@ export default function AdminDashboard() {
         const packageNoGB = tx.package_name ? tx.package_name.replace(/GB/gi, '').trim() : '';
 
         return [
-          `="${tx.user_msisdn}"`, // Force Excel to treat as text using formula prefix
+          // `="${tx.user_msisdn}"`, // Force Excel to treat as text using formula prefix
           `="${packageNoGB}"`,
           tx.network,
           `="${recipient9}"`, // Force Excel to treat as text using formula prefix
-          tx.amount,
-          tx.status,
-          new Date(tx.created_at).toLocaleDateString(),
-          new Date(tx.created_at).toLocaleTimeString()
+          // tx.amount,
+          // tx.status,
+          // new Date(tx.created_at).toLocaleDateString(),
+          // new Date(tx.created_at).toLocaleTimeString()
         ];
       })
 
