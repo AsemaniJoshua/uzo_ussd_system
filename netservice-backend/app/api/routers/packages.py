@@ -4,6 +4,7 @@ from app.db.session import get_session
 from app.repositories.package_repo import PackageRepository
 from app.schemas.package_schemas import PackageOut, PackageCreate, PackageUpdate, NetworkEnum
 from typing import List, Optional
+from app.api.routers.admin import get_superadmin
 
 router = APIRouter(prefix="/packages", tags=["packages"])
 
@@ -21,12 +22,12 @@ async def get_package(package_id: int, db: AsyncSession = Depends(get_session)):
     return pkg
 
 @router.post("/", response_model=PackageOut)
-async def create_package(data: PackageCreate, db: AsyncSession = Depends(get_session)):
+async def create_package(data: PackageCreate, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     repo = PackageRepository(db)
     return await repo.create(data)
 
 @router.put("/{package_id}", response_model=PackageOut)
-async def update_package(package_id: int, data: PackageUpdate, db: AsyncSession = Depends(get_session)):
+async def update_package(package_id: int, data: PackageUpdate, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     repo = PackageRepository(db)
     pkg = await repo.update(package_id, data)
     if not pkg:
@@ -34,7 +35,7 @@ async def update_package(package_id: int, data: PackageUpdate, db: AsyncSession 
     return pkg
 
 @router.delete("/{package_id}")
-async def delete_package(package_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_package(package_id: int, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     repo = PackageRepository(db)
     ok = await repo.delete(package_id)
     if not ok:

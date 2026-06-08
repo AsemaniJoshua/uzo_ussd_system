@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatPhoneNumber } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ServedProductsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -27,6 +28,8 @@ export default function ServedProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedNetwork, setSelectedNetwork] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const { user } = useAuth()
+  const isStaff = user?.role === 'staff'
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -86,13 +89,13 @@ export default function ServedProductsPage() {
 
   const handleExportCSV = () => {
     try {
-      const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date']
+      const headers = ['User', 'Package', 'Network', 'Recipient', isStaff ? 'Profit' : 'Amount', 'Status', 'Date']
       const csvData = filteredTransactions.map(tx => [
         `="${tx.user_msisdn}"`,
         `="${tx.package_name}"`,
         tx.network,
         `="${tx.recipient}"`,
-        tx.amount,
+        isStaff ? (tx.profit_amount != null ? tx.profit_amount : '-') : tx.amount,
         'Served',
         new Date(tx.served_at || tx.created_at).toLocaleDateString(),
       ])
@@ -263,7 +266,7 @@ export default function ServedProductsPage() {
                           Recipient
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
+                          {isStaff ? 'Profit' : 'Amount'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
@@ -301,7 +304,11 @@ export default function ServedProductsPage() {
                             {formatPhoneNumber(transaction.recipient)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {formatCurrency(Number(transaction.amount))}
+                            {isStaff
+                              ? transaction.profit_amount != null
+                                ? formatCurrency(Number(transaction.profit_amount))
+                                : '-'
+                              : formatCurrency(Number(transaction.amount))}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -489,10 +496,14 @@ export default function ServedProductsPage() {
 
                     <div>
                       <p className="text-xs text-gray-600 uppercase font-semibold">
-                        Amount
+                        {isStaff ? 'Profit' : 'Amount'}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {formatCurrency(Number(selectedTransaction.amount))}
+                        {isStaff
+                          ? selectedTransaction.profit_amount != null
+                            ? formatCurrency(Number(selectedTransaction.profit_amount))
+                            : '-'
+                          : formatCurrency(Number(selectedTransaction.amount))}
                       </p>
                     </div>
 

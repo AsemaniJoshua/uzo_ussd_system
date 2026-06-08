@@ -13,6 +13,7 @@ class PackageOut(BaseModel):
     network: NetworkEnum
     package_name: str
     amount: Decimal
+    profit_amount: Optional[Decimal] = None
     active: int
 
     class Config:
@@ -22,9 +23,11 @@ class PackageCreate(BaseModel):
     network: NetworkEnum
     package_name: str
     amount: Decimal
+    profit_amount: Optional[Decimal] = None
     active: Optional[int] = 1
 
 class PackageUpdate(BaseModel):
-    package_name: Optional[str]
-    amount: Optional[Decimal]
-    active: Optional[int]
+    package_name: Optional[str] = None
+    amount: Optional[Decimal] = None
+    profit_amount: Optional[Decimal] = None
+    active: Optional[int] = None

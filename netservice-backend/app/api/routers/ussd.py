@@ -162,6 +162,7 @@ async def ussd_simulator(
                 if 0 <= pkg_idx < len(packages):
                     session['package'] = packages[pkg_idx][0]
                     session['amount'] = packages[pkg_idx][1]
+                    session['profit_amount'] = packages[pkg_idx][2]
                     session['stage'] = USSDState.ENTER_RECIPIENT
                     ussd_sessions[session_id] = session
                     return "Enter recipient phone number (10 digits):"
@@ -203,7 +204,7 @@ async def get_packages_from_db(db: AsyncSession, network: NetworkEnum):
     """Get packages from database"""
     repo = PackageRepository(db)
     packages = await repo.get_all(network)
-    return [(pkg.package_name, str(pkg.amount)) for pkg in packages if pkg.active == 1]
+    return [(pkg.package_name, str(pkg.amount), str(pkg.profit_amount) if pkg.profit_amount is not None else None) for pkg in packages if pkg.active == 1]
 
 def format_packages_menu(packages):
     """Format packages list for USSD display"""
@@ -495,11 +496,12 @@ async def ussd_callback(
                     async for db in get_session():
                         packages = await get_packages_from_db(db, session['network'])
                         if 0 <= package_idx < len(packages):
-                            package_name, price = packages[package_idx]
+                            package_name, price, profit_amount = packages[package_idx]
                             session['stage'] = USSDState.RECIPIENT_SELECT
                             session['package_idx'] = package_idx
                             session['package_name'] = package_name
                             session['package_amount'] = price
+                            session['profit_amount'] = profit_amount
                             ussd_sessions[session_id] = session
                             return UzoUSSDResponse(message=recipient_choice_menu(), ussdServiceOp=2).model_dump()
                         else:
@@ -561,6 +563,7 @@ async def ussd_callback(
                             network=session['network'].value,
                             package_name=session['package_name'],
                             amount=amount,
+                            profit_amount=Decimal(session['profit_amount']) if session.get('profit_amount') else None,
                             recipient=session['recipient']
                         )
                         

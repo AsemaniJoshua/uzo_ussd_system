@@ -9,6 +9,7 @@ from app.usecases.transaction_usecases import TransactionUseCases
 from app.usecases.settings_usecases import SettingsUseCases
 from app.schemas.auth import Token, AdminCreate, AdminOut, PasswordUpdate
 from app.repositories.admin_user_repo import AdminUserRepository
+from app.models.orm_models import AdminRole
 
 router = APIRouter(prefix="/admin")
 
@@ -17,7 +18,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/token")
 
 # Create a new admin user (superadmin only in production)
 @router.post("/create")
-async def create_admin(admin_in: AdminCreate, db: AsyncSession = Depends(get_session)):
+async def create_admin(admin_in: AdminCreate, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     repo = AdminUserRepository(db)
     existing = await repo.get_by_username(admin_in.username)
     if existing:
@@ -91,6 +92,11 @@ async def get_current_admin(token: str = Depends(oauth2_scheme), db: AsyncSessio
     logger.info(f"Admin authenticated: {admin.username} (id: {admin.id})")
     return admin
 
+async def get_superadmin(admin = Depends(get_current_admin)):
+    if admin.role != AdminRole.superadmin:
+        raise HTTPException(status_code=403, detail="Not authorized. Superadmin access required.")
+    return admin
+
 @router.get("/requests")
 async def list_requests(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_session), admin = Depends(get_current_admin)):
     uc = TransactionUseCases(db)
@@ -126,7 +132,8 @@ async def list_requests_by_date(
             "recipient": tx.recipient,
             "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
             "created_at": tx.created_at.isoformat() if tx.created_at else None,
-            "payment_reference": tx.payment_reference
+            "payment_reference": tx.payment_reference,
+            "profit_amount": float(tx.profit_amount) if tx.profit_amount is not None else None
         }
         for tx in transactions
     ]
@@ -151,7 +158,8 @@ async def list_recent_requests(
             "recipient": tx.recipient,
             "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
             "created_at": tx.created_at.isoformat() if tx.created_at else None,
-            "payment_reference": tx.payment_reference
+            "payment_reference": tx.payment_reference,
+            "profit_amount": float(tx.profit_amount) if tx.profit_amount is not None else None
         }
         for tx in transactions
     ]
@@ -205,7 +213,7 @@ async def update_password(password_data: PasswordUpdate, db: AsyncSession = Depe
     return {"message": "Password updated successfully"}
 
 @router.get("/admins")
-async def list_admins(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_session), admin = Depends(get_current_admin)):
+async def list_admins(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     repo = AdminUserRepository(db)
     admins = await repo.list_all(skip=skip, limit=limit)
     return [
@@ -220,7 +228,7 @@ async def list_admins(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
     ]
 
 @router.delete("/admins/{username}")
-async def delete_admin(username: str, db: AsyncSession = Depends(get_session), current_admin = Depends(get_current_admin)):
+async def delete_admin(username: str, db: AsyncSession = Depends(get_session), current_admin = Depends(get_superadmin)):
     if username == current_admin.username:
         raise HTTPException(status_code=400, detail="Cannot delete your own account")
     repo = AdminUserRepository(db)
@@ -240,7 +248,7 @@ async def get_settings(db: AsyncSession = Depends(get_session), admin = Depends(
 
 
 @router.put("/settings/ussd-restriction")
-async def update_ussd_restriction(restricted: bool, db: AsyncSession = Depends(get_session), admin = Depends(get_current_admin)):
+async def update_ussd_restriction(restricted: bool, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
     """Enable or disable USSD restriction"""
     uc = SettingsUseCases(db)
     result = await uc.set_ussd_restriction(restricted)
@@ -252,7 +260,7 @@ async def update_ussd_restriction(restricted: bool, db: AsyncSession = Depends(g
 async def upload_whitelist(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_session),
-    admin = Depends(get_current_admin)
+    admin = Depends(get_superadmin)
 ):
     """Upload Excel file with phone numbers for whitelist import"""
     # Validate file type

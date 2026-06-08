@@ -11,6 +11,7 @@ class CreateTransactionIn(BaseModel):
     package_id: Optional[int] = None
     package_name: str
     amount: Decimal
+    profit_amount: Optional[Decimal] = None
     recipient: str
     payment_method: Optional[str] = None
 
@@ -21,6 +22,7 @@ class TransactionOut(BaseModel):
     network: str
     package_name: str
     amount: Decimal
+    profit_amount: Optional[Decimal] = None
     recipient: str
     payment_method: Optional[str]
     payment_reference: Optional[str]

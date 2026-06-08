@@ -9,6 +9,7 @@ export interface Package {
   network: NetworkEnum
   package_name: string
   amount: number
+  profit_amount?: number | null
   active: number
 }
 
@@ -16,12 +17,14 @@ export interface PackageCreate {
   network: NetworkEnum
   package_name: string
   amount: number
+  profit_amount?: number | null
   active?: number
 }
 
 export interface PackageUpdate {
   package_name?: string
   amount?: number
+  profit_amount?: number | null
   active?: number
 }
 
@@ -32,6 +35,7 @@ export interface Transaction {
   network: string
   package_name: string
   amount: number
+  profit_amount?: number | null
   recipient: string
   payment_method?: string
   payment_reference?: string
@@ -49,6 +53,7 @@ export interface CreateTransactionIn {
   package_id?: number
   package_name: string
   amount: number
+  profit_amount?: number | null
   recipient: string
   payment_method?: string
 }

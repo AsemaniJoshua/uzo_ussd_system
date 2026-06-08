@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatPhoneNumber } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -24,6 +25,8 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const { user } = useAuth()
+  const isStaff = user?.role === 'staff'
 
   useEffect(() => {
     fetchTransactions()
@@ -168,7 +171,7 @@ export default function TransactionsPage() {
                         Network
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
+                        {isStaff ? 'Profit' : 'Amount'}
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
@@ -223,7 +226,11 @@ export default function TransactionsPage() {
                           </span>
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(Number(transaction.amount))}
+                          {isStaff
+                            ? transaction.profit_amount != null
+                              ? formatCurrency(Number(transaction.profit_amount))
+                              : '-'
+                            : formatCurrency(Number(transaction.amount))}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(transaction.status ?? 'PENDING')}`}>
@@ -282,6 +289,9 @@ function TransactionModal({
   transaction: Transaction | null
   onClose: () => void
 }) {
+  const { user } = useAuth()
+  const isStaff = user?.role === 'staff'
+
   if (!transaction) return null
 
   return (
@@ -340,8 +350,14 @@ function TransactionModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500">Amount</label>
-                <p className="text-lg font-semibold text-gray-900">{formatCurrency(Number(transaction.amount))}</p>
+                <label className="block text-sm font-medium text-gray-500">{isStaff ? 'Profit' : 'Amount'}</label>
+                <p className="text-lg font-semibold text-gray-900">
+                  {isStaff
+                    ? transaction.profit_amount != null
+                      ? formatCurrency(Number(transaction.profit_amount))
+                      : '-'
+                    : formatCurrency(Number(transaction.amount))}
+                </p>
               </div>
 
               {transaction.payment_method && (

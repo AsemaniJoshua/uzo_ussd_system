@@ -18,6 +18,7 @@ class TransactionRepository:
             package_id=inp.package_id,
             package_name=inp.package_name,
             amount=inp.amount,
+            profit_amount=inp.profit_amount,
             recipient=inp.recipient,
             payment_method=inp.payment_method,
             status="PENDING"
@@ -65,6 +66,7 @@ class TransactionRepository:
             network=tx.network.value if hasattr(tx.network, "value") else tx.network,
             package_name=tx.package_name,
             amount=tx.amount,
+            profit_amount=tx.profit_amount,
             recipient=tx.recipient,
             processed_by=processed_by,
             payment_reference=tx.payment_reference,
@@ -106,6 +108,7 @@ class TransactionRepository:
             package_id=None,
             package_name=served.package_name,
             amount=served.amount,
+            profit_amount=served.profit_amount,
             recipient=served.recipient,
             payment_method=None,
             payment_reference=served.payment_reference,

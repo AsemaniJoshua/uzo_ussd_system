@@ -259,6 +259,7 @@ function PackageModal({
     network: 'MTN' as NetworkEnum,
     package_name: '',
     amount: '',
+    profit_amount: '',
     active: 1,
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -269,6 +270,7 @@ function PackageModal({
         network: pkg.network,
         package_name: pkg.package_name,
         amount: pkg.amount.toString(),
+        profit_amount: pkg.profit_amount ? pkg.profit_amount.toString() : '',
         active: pkg.active,
       })
     } else {
@@ -276,6 +278,7 @@ function PackageModal({
         network: 'MTN',
         package_name: '',
         amount: '',
+        profit_amount: '',
         active: 1,
       })
     }
@@ -289,6 +292,7 @@ function PackageModal({
       const data = {
         ...formData,
         amount: parseFloat(formData.amount),
+        profit_amount: formData.profit_amount ? parseFloat(formData.profit_amount) : null,
       }
 
       if (pkg) {
@@ -356,6 +360,18 @@ function PackageModal({
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Profit Amount (Optional)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.profit_amount}
+                  onChange={(e) => setFormData({ ...formData, profit_amount: e.target.value })}
+                  placeholder="e.g. 1.00"
                 />
               </div>
 

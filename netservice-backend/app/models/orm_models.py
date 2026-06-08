@@ -27,6 +27,7 @@ class Transaction(Base):
     recipient = Column(String(64), nullable=False)   # stored as typed (starting with 0 if entered)
     payment_method = Column(String(64), nullable=True)
     payment_reference = Column(String(128), nullable=True, index=True)
+    profit_amount = Column(Numeric(10,2), nullable=True)
     status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -41,6 +42,7 @@ class ServedRequest(Base):
     recipient = Column(String(64))
     processed_by = Column(String(128), nullable=True)
     payment_reference = Column(String(128), nullable=True)
+    profit_amount = Column(Numeric(10,2), nullable=True)
     status = Column(String(32), nullable=True)  # Store original status (PAID, etc.)
     session_id = Column(String(128), nullable=True)  # Store original session_id
     user_msisdn = Column(String(64), nullable=True)  # Store original user_msisdn
@@ -52,6 +54,7 @@ class Package(Base):
     network = Column(Enum(NetworkEnum), nullable=False)
     package_name = Column(String(64), nullable=False)
     amount = Column(Numeric(10,2), nullable=False)
+    profit_amount = Column(Numeric(10,2), nullable=True)
     active = Column(Integer, default=1)
 
 

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatPhoneNumber } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DashboardStats {
   totalPackages: number
@@ -41,6 +42,8 @@ export default function AdminDashboard() {
   const [isServing, setIsServing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState('')
+  const { user } = useAuth()
+  const isStaff = user?.role === 'staff'
 
   useEffect(() => {
     fetchDashboardData()
@@ -67,7 +70,11 @@ export default function AdminDashboard() {
       )
       
       // Calculate total revenue from PAID transactions (not yet served)
-      const totalRevenue = paidTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0)
+      // If user is staff, sum up profit_amount instead of total amount
+      const totalRevenue = paidTransactions.reduce((sum, tx) => {
+        const val = isStaff ? (tx.profit_amount || 0) : tx.amount;
+        return sum + Number(val);
+      }, 0)
 
       setStats({
         totalPackages: packages.length,
@@ -282,7 +289,7 @@ export default function AdminDashboard() {
             />
             <StatCard
               icon={DollarSign}
-              title="Total Revenue"
+              title={isStaff ? "Total Profit" : "Total Revenue"}
               value={formatCurrency(stats.totalRevenue)}
               color="bg-purple-500"
             />
@@ -374,7 +381,7 @@ export default function AdminDashboard() {
                               Recipient
                             </th>
                             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Amount
+                              {isStaff ? 'Profit' : 'Amount'}
                             </th>
                             <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Time
@@ -418,7 +425,11 @@ export default function AdminDashboard() {
                                 {formatPhoneNumber(transaction.recipient)}
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {formatCurrency(Number(transaction.amount))}
+                                {isStaff
+                                  ? transaction.profit_amount != null
+                                    ? formatCurrency(Number(transaction.profit_amount))
+                                    : '-'
+                                  : formatCurrency(Number(transaction.amount))}
                               </td>
                               <td className="hidden sm:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {new Date(transaction.created_at).toLocaleTimeString()}
@@ -516,10 +527,14 @@ export default function AdminDashboard() {
 
                       <div>
                         <p className="text-xs text-gray-600 uppercase font-semibold">
-                          Amount
+                          {isStaff ? 'Profit' : 'Amount'}
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(Number(selectedTransaction.amount))}
+                          {isStaff
+                            ? selectedTransaction.profit_amount != null
+                              ? formatCurrency(Number(selectedTransaction.profit_amount))
+                              : '-'
+                            : formatCurrency(Number(selectedTransaction.amount))}
                         </p>
                       </div>
 
