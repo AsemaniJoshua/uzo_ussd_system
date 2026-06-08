@@ -16,6 +16,34 @@ router = APIRouter(prefix="/admin")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/token")
 
 
+async def get_current_admin(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_session)):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"get_current_admin called with token: {token[:20]}..." if token else "No token")
+    
+    sub = verify_access_token(token)
+    logger.info(f"Token verification result - username: {sub}")
+    
+    if not sub:
+        logger.error("Token verification failed - invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    repo = AdminUserRepository(db)
+    admin = await repo.get_by_username(sub)
+    
+    if not admin:
+        logger.error(f"Admin user not found for username: {sub}")
+        raise HTTPException(status_code=401, detail="Invalid admin user")
+    
+    logger.info(f"Admin authenticated: {admin.username} (id: {admin.id})")
+    return admin
+
+async def get_superadmin(admin = Depends(get_current_admin)):
+    if admin.role != AdminRole.superadmin:
+        raise HTTPException(status_code=403, detail="Not authorized. Superadmin access required.")
+    return admin
+
+
 # Create a new admin user (superadmin only in production)
 @router.post("/create")
 async def create_admin(admin_in: AdminCreate, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
@@ -70,32 +98,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     return response
 
 
-async def get_current_admin(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_session)):
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"get_current_admin called with token: {token[:20]}..." if token else "No token")
-    
-    sub = verify_access_token(token)
-    logger.info(f"Token verification result - username: {sub}")
-    
-    if not sub:
-        logger.error("Token verification failed - invalid token")
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    repo = AdminUserRepository(db)
-    admin = await repo.get_by_username(sub)
-    
-    if not admin:
-        logger.error(f"Admin user not found for username: {sub}")
-        raise HTTPException(status_code=401, detail="Invalid admin user")
-    
-    logger.info(f"Admin authenticated: {admin.username} (id: {admin.id})")
-    return admin
-
-async def get_superadmin(admin = Depends(get_current_admin)):
-    if admin.role != AdminRole.superadmin:
-        raise HTTPException(status_code=403, detail="Not authorized. Superadmin access required.")
-    return admin
 
 @router.get("/requests")
 async def list_requests(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_session), admin = Depends(get_current_admin)):
