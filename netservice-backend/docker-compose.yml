@@ -4,8 +4,8 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: netservice_db
-      MYSQL_USER: netservice
+      MYSQL_DATABASE: NetService_db
+      MYSQL_USER: NetService
       MYSQL_PASSWORD: netpass
     ports:
       - "3306:3306"

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import { Package, PackageCreate, PackageUpdate, Transaction, AdminUser, AdminCreate, Token, LoginCredentials, NetworkEnum } from '@/types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api2.netservicedata.site'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api1.glosservice.site'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -96,6 +96,20 @@ export const apiClient = {
       // Matches @router.get("/requests")
       const response = await api.get('/api/admin/requests', {
         params: { skip, limit },
+      })
+      return response.data
+    },
+    listByDate: async (date: string, status: string = ''): Promise<Transaction[]> => {
+      // Matches @router.get("/requests/by-date")
+      const response = await api.get('/api/admin/requests/by-date', {
+        params: { date, status },
+      })
+      return response.data
+    },
+    listRecentDays: async (days: number = 31): Promise<Transaction[]> => {
+      // Matches @router.get("/requests/recent-days")
+      const response = await api.get('/api/admin/requests/recent-days', {
+        params: { days },
       })
       return response.data
     },

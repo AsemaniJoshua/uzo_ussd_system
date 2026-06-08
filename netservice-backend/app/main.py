@@ -57,7 +57,7 @@ async def startup():
 
 @app.get("/")
 async def root():
-    return {"service": "netservice-backend", "status": "ok"}
+    return {"service": "NetService-backend", "status": "ok"}
 
 
 

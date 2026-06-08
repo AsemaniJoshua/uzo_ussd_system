@@ -15,14 +15,14 @@
 
 ### 1. Start the Backend Server:
 ```bash
-cd netservice-backend
+cd NetService-backend
 source .venv/Scripts/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. Create Admin User (if not exists):
 ```bash
-cd netservice-backend
+cd NetService-backend
 source .venv/Scripts/activate
 python create_admin.py
 ```

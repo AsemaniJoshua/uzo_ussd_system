@@ -36,7 +36,7 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     try {
       setIsLoading(true)
-      const data = await apiClient.transactions.list(0, 100)
+      const data = await apiClient.transactions.list(0, 1000000)
       setTransactions(data)
     } catch (error) {
       console.error('Failed to fetch transactions:', error)

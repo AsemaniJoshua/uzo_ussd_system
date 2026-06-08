@@ -55,7 +55,7 @@ export default function AdminDashboard() {
       setIsLoading(true)
       const [packages, transactions] = await Promise.all([
         apiClient.packages.list(),
-        apiClient.transactions.list(0, 10000), // Get all unserved transactions
+        apiClient.transactions.listRecentDays(31), // Get all unserved transactions for the last 31 days
       ])
 
       // Filter PAID transactions (unserved)
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
         pendingTransactions: pendingTransactions.length,
       })
 
-      setRecentTransactions(paidTransactions.slice(0, 100)) // Show more PAID transactions
+      setRecentTransactions(paidTransactions) // Show only PAID transactions on dashboard
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
       toast.error('Failed to load dashboard data')
@@ -100,9 +100,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleExportCSV = (date: string, transactions: Transaction[]) => {
+  const handleExportCSV = async (yyyymmdd: string, dateDisplay: string) => {
+    const toastId = toast.loading(`Fetching all transactions for ${dateDisplay}...`)
     try {
-      // const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date', 'Time']
+      // Fetch all transactions for that specific day from the backend (no limit)
+      const transactions = await apiClient.transactions.listByDate(yyyymmdd, 'PAID')
+      
       const headers = ['Package', 'Network', 'Recipient']
       const csvData = transactions.map(tx => {
         // Format recipient to 9 digits
@@ -119,14 +122,9 @@ export default function AdminDashboard() {
         const packageNoGB = tx.package_name ? tx.package_name.replace(/GB/gi, '').trim() : '';
 
         return [
-          // `="${tx.user_msisdn}"`, // Force Excel to treat as text using formula prefix
           `="${packageNoGB}"`,
           tx.network,
-          `="${recipient9}"`, // Force Excel to treat as text using formula prefix
-          // tx.amount,
-          // tx.status,
-          // new Date(tx.created_at).toLocaleDateString(),
-          // new Date(tx.created_at).toLocaleTimeString()
+          `="${recipient9}"`,
         ];
       })
 
@@ -141,7 +139,7 @@ export default function AdminDashboard() {
       link.setAttribute('href', url)
       
       // Format filename: transactions_Monday_January_20_2026.csv
-      const safeDate = date.replace(/[, ]+/g, '_')
+      const safeDate = dateDisplay.replace(/[, ]+/g, '_')
       link.setAttribute('download', `transactions_${safeDate}.csv`)
       
       link.style.visibility = 'hidden'
@@ -149,10 +147,10 @@ export default function AdminDashboard() {
       link.click()
       document.body.removeChild(link)
       
-      toast.success(`Exported ${transactions.length} transactions`)
+      toast.success(`Exported ${transactions.length} transactions`, { id: toastId })
     } catch (error) {
       console.error('Export failed:', error)
-      toast.error('Failed to export data')
+      toast.error('Failed to export data', { id: toastId })
     }
   }
 
@@ -180,22 +178,46 @@ export default function AdminDashboard() {
     setFilteredTransactions(filtered)
   }
 
-  // Group transactions by day
+  // Group transactions by day (mapping YYYY-MM-DD to display text and items)
   const groupTransactionsByDay = (transactions: Transaction[]) => {
-    const groups: { [key: string]: Transaction[] } = {}
+    const groups: { [key: string]: { dateDisplay: string; transactions: Transaction[] } } = {}
+    
+    // Pre-populate last 31 days (today to 30 days ago)
+    const now = new Date()
+    for (let i = 0; i < 31; i++) {
+      const d = new Date()
+      d.setDate(now.getDate() - i)
+      const yyyymmdd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const dateDisplay = d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      groups[yyyymmdd] = {
+        dateDisplay,
+        transactions: []
+      }
+    }
     
     transactions.forEach(tx => {
-      const date = new Date(tx.created_at).toLocaleDateString('en-US', {
+      const txDate = new Date(tx.created_at);
+      const yyyymmdd = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}-${String(txDate.getDate()).padStart(2, '0')}`;
+      
+      const dateDisplay = txDate.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       })
       
-      if (!groups[date]) {
-        groups[date] = []
+      if (!groups[yyyymmdd]) {
+        groups[yyyymmdd] = {
+          dateDisplay,
+          transactions: []
+        }
       }
-      groups[date].push(tx)
+      groups[yyyymmdd].transactions.push(tx)
     })
     
     return groups
@@ -311,117 +333,124 @@ export default function AdminDashboard() {
                   No PAID transactions found
                 </div>
               ) : (
-                Object.entries(groupedTransactions).map(([date, dayTransactions]) => (
-                  <div key={date} className="mb-20 last:mb-0">
-                    {/* Day Header */}
-                    <div className="bg-gradient-to-r from-blue-50 to-gray-100 px-6 py-4 rounded-t-lg border-l-4 border-blue-500 flex justify-between items-center">
-                      <h3 className="text-base font-bold text-gray-800">
-                        {date} <span className="text-sm font-normal text-gray-600">({dayTransactions.length} transaction{dayTransactions.length !== 1 ? 's' : ''})</span>
-                      </h3>
-                      <button
-                        onClick={() => handleExportCSV(date, dayTransactions)}
-                        className="flex items-center gap-2 px-3 py-1 bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium shadow-sm"
-                        title="Export this day's transactions to CSV"
-                      >
-                        <Download className="w-4 h-4" />
-                        Export CSV
-                      </button>
-                    </div>
-                    
-                    {/* Transactions for this day */}
-                    <table className="min-w-full divide-y divide-gray-200 shadow-sm rounded-b-lg overflow-hidden">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            #
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            User
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Package
-                          </th>
-                          <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Network
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Recipient
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Time
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {dayTransactions.map((transaction, index) => (
-                          <tr key={transaction.id} className="hover:bg-gray-50">
-                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {index + 1}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {formatPhoneNumber(transaction.user_msisdn)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              <div>{transaction.package_name}</div>
-                              <div className="md:hidden mt-1">
-                                <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                Object.entries(groupedTransactions)
+                  .sort((a, b) => b[0].localeCompare(a[0]))
+                  .map(([yyyymmdd, groupData]) => {
+                  const { dateDisplay, transactions: dayTransactions } = groupData;
+                  return (
+                    <div key={yyyymmdd} className="mb-20 last:mb-0">
+                      {/* Day Header */}
+                      <div className="bg-gradient-to-r from-blue-50 to-gray-100 px-6 py-4 rounded-t-lg border-l-4 border-blue-500 flex justify-between items-center">
+                        <h3 className="text-base font-bold text-gray-800">
+                           {dateDisplay} <span className="text-sm font-normal text-gray-600">({dayTransactions.length} transaction{dayTransactions.length !== 1 ? 's' : ''})</span>
+                        </h3>
+                        <button
+                          onClick={() => handleExportCSV(yyyymmdd, dateDisplay)}
+                          className="flex items-center gap-2 px-3 py-1 bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium shadow-sm"
+                          title="Export this day's transactions to CSV"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export CSV
+                        </button>
+                      </div>
+                      
+                      {/* Transactions for this day */}
+                      <table className="min-w-full divide-y divide-gray-200 shadow-sm rounded-b-lg overflow-hidden">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              #
+                            </th>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              User
+                            </th>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Package
+                            </th>
+                            <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Network
+                            </th>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Recipient
+                            </th>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Amount
+                            </th>
+                            <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time
+                            </th>
+                            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {dayTransactions.map((transaction, index) => (
+                            <tr key={transaction.id} className="hover:bg-gray-50">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {formatPhoneNumber(transaction.user_msisdn)}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                <div>{transaction.package_name}</div>
+                                <div className="md:hidden mt-1">
+                                  <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                                    transaction.network === 'MTN' ? 'bg-yellow-100 text-yellow-800' :
+                                    transaction.network === 'TELECEL' ? 'bg-red-100 text-red-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {transaction.network}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="hidden md:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                <span className={`px-2 py-1 rounded-md text-xs font-bold ${
                                   transaction.network === 'MTN' ? 'bg-yellow-100 text-yellow-800' :
                                   transaction.network === 'TELECEL' ? 'bg-red-100 text-red-800' :
                                   'bg-blue-100 text-blue-800'
                                 }`}>
                                   {transaction.network}
                                 </span>
-                              </div>
-                            </td>
-                            <td className="hidden md:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              <span className={`px-2 py-1 rounded-md text-xs font-bold ${
-                                transaction.network === 'MTN' ? 'bg-yellow-100 text-yellow-800' :
-                                transaction.network === 'TELECEL' ? 'bg-red-100 text-red-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
-                                {transaction.network}
-                              </span>
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {formatPhoneNumber(transaction.recipient)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {formatCurrency(Number(transaction.amount))}
-                            </td>
-                            <td className="hidden sm:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(transaction.created_at).toLocaleTimeString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => setSelectedTransaction(transaction)}
-                                  className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  View
-                                </button>
-                                <button
-                                  onClick={() => handleServeTransaction(transaction.id)}
-                                  disabled={isServing}
-                                  className="text-green-600 hover:text-green-800 font-medium flex items-center gap-1 disabled:opacity-50"
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-                                  Serve
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ))
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {formatPhoneNumber(transaction.recipient)}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {formatCurrency(Number(transaction.amount))}
+                              </td>
+                              <td className="hidden sm:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(transaction.created_at).toLocaleTimeString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setSelectedTransaction(transaction)}
+                                    className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View
+                                  </button>
+                                  {transaction.status === 'PAID' && (
+                                    <button
+                                      onClick={() => handleServeTransaction(transaction.id)}
+                                      disabled={isServing}
+                                      className="text-green-600 hover:text-green-800 font-medium flex items-center gap-1 disabled:opacity-50"
+                                    >
+                                      <CheckCircle className="w-4 h-4" />
+                                      Serve
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

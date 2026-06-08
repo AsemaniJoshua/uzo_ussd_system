@@ -13,12 +13,12 @@
 
 #### Option A: Using Alembic Migration (Recommended)
 ```bash
-cd netservice-backend
+cd NetService-backend
 alembic upgrade head
 ```
 
 #### Option B: Run SQL Script Directly
-Execute the SQL file: `netservice-backend/update_served_requests.sql`
+Execute the SQL file: `NetService-backend/update_served_requests.sql`
 
 Or run this SQL manually:
 ```sql

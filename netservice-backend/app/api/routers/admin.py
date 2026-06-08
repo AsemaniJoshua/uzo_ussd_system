@@ -97,6 +97,66 @@ async def list_requests(skip: int = 0, limit: int = 100, db: AsyncSession = Depe
     rows = await uc.list_transactions(skip=skip, limit=limit)
     return rows
 
+@router.get("/requests/by-date")
+async def list_requests_by_date(
+    date: str,
+    status: str | None = None,
+    db: AsyncSession = Depends(get_session),
+    admin = Depends(get_current_admin)
+):
+    try:
+        from datetime import datetime
+        parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD")
+        
+    if not status or status == "null" or status == "undefined":
+        status = None
+        
+    uc = TransactionUseCases(db)
+    transactions = await uc.list_transactions_by_date(parsed_date, status)
+    return [
+        {
+            "id": tx.id,
+            "session_id": tx.session_id,
+            "user_msisdn": tx.user_msisdn,
+            "network": tx.network.value if hasattr(tx.network, "value") else tx.network,
+            "package_name": tx.package_name,
+            "amount": float(tx.amount),
+            "recipient": tx.recipient,
+            "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
+            "created_at": tx.created_at.isoformat() if tx.created_at else None,
+            "payment_reference": tx.payment_reference
+        }
+        for tx in transactions
+    ]
+
+
+@router.get("/requests/recent-days")
+async def list_recent_requests(
+    days: int = 31,
+    db: AsyncSession = Depends(get_session),
+    admin = Depends(get_current_admin)
+):
+    uc = TransactionUseCases(db)
+    transactions = await uc.list_recent_transactions(days=days)
+    return [
+        {
+            "id": tx.id,
+            "session_id": tx.session_id,
+            "user_msisdn": tx.user_msisdn,
+            "network": tx.network.value if hasattr(tx.network, "value") else tx.network,
+            "package_name": tx.package_name,
+            "amount": float(tx.amount),
+            "recipient": tx.recipient,
+            "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
+            "created_at": tx.created_at.isoformat() if tx.created_at else None,
+            "payment_reference": tx.payment_reference
+        }
+        for tx in transactions
+    ]
+
+
 @router.post("/requests/{request_id}/serve")
 async def serve_request(request_id: int, db: AsyncSession = Depends(get_session), admin = Depends(get_current_admin)):
     uc = TransactionUseCases(db)

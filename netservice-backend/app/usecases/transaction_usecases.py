@@ -46,3 +46,11 @@ class TransactionUseCases:
     async def user_has_paid_before(self, msisdn: str) -> bool:
         """Check if user has any paid transaction ever"""
         return await self.repo.has_paid_transaction(msisdn)
+
+    async def list_transactions_by_date(self, parsed_date, status: str = "PAID"):
+        return await self.repo.list_by_date(parsed_date, status)
+
+    async def list_recent_transactions(self, days: int = 3):
+        return await self.repo.list_recent_days(days=days)
+
+

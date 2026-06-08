@@ -144,3 +144,28 @@ class TransactionRepository:
             .limit(1)
         )
         return q2.scalars().first() is not None
+
+    async def list_by_date(self, parsed_date, status: str = "PAID") -> List[Transaction]:
+        from sqlalchemy import func
+        q = await self.db.execute(
+            select(Transaction)
+            .where(func.date(Transaction.created_at) == parsed_date)
+            .where(Transaction.status == status)
+            .order_by(Transaction.created_at.desc())
+        )
+        return q.scalars().all()
+
+    async def list_recent_days(self, days: int = 3) -> List[Transaction]:
+        from datetime import datetime, time, timedelta
+        today = datetime.now().date()
+        start_date = today - timedelta(days=days - 1)
+        start_datetime = datetime.combine(start_date, time.min)
+        
+        q = await self.db.execute(
+            select(Transaction)
+            .where(Transaction.created_at >= start_datetime)
+            .order_by(Transaction.created_at.desc())
+        )
+        return q.scalars().all()
+
+
