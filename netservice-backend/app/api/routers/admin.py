@@ -56,8 +56,8 @@ async def create_admin(admin_in: AdminCreate, db: AsyncSession = Depends(get_ses
         "id": admin.id,
         "username": admin.username,
         "role": admin.role,
-        "created_at": admin.created_at.isoformat() if admin.created_at else None,
-        "updated_at": admin.updated_at.isoformat() if admin.updated_at else None
+        "created_at": admin.created_at,
+        "updated_at": admin.updated_at
     }
 
 
@@ -133,7 +133,7 @@ async def list_requests_by_date(
             "amount": float(tx.amount),
             "recipient": tx.recipient,
             "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
-            "created_at": tx.created_at.isoformat() if tx.created_at else None,
+            "created_at": tx.created_at,
             "payment_reference": tx.payment_reference,
             "profit_amount": float(tx.profit_amount) if tx.profit_amount is not None else None
         }
@@ -159,7 +159,7 @@ async def list_recent_requests(
             "amount": float(tx.amount),
             "recipient": tx.recipient,
             "status": tx.status.value if hasattr(tx.status, "value") else tx.status,
-            "created_at": tx.created_at.isoformat() if tx.created_at else None,
+            "created_at": tx.created_at,
             "payment_reference": tx.payment_reference,
             "profit_amount": float(tx.profit_amount) if tx.profit_amount is not None else None
         }
@@ -223,8 +223,8 @@ async def list_admins(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
             "id": a.id,
             "username": a.username,
             "role": a.role,
-            "created_at": a.created_at.isoformat() if a.created_at else None,
-            "updated_at": a.updated_at.isoformat() if a.updated_at else None
+            "created_at": a.created_at,
+            "updated_at": a.updated_at
         }
         for a in admins
     ]
