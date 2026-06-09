@@ -25,14 +25,14 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const { user } = useAuth()
+  const { user, isLoading: authIsLoading } = useAuth()
   const isStaff = user?.role !== 'superadmin'
 
   useEffect(() => {
-    if (user) {
+    if (!authIsLoading) {
       fetchTransactions()
     }
-  }, [user])
+  }, [authIsLoading])
 
   useEffect(() => {
     filterTransactions()

@@ -42,14 +42,14 @@ export default function AdminDashboard() {
   const [isServing, setIsServing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState('')
-  const { user } = useAuth()
+  const { user, isLoading: authIsLoading } = useAuth()
   const isStaff = user?.role !== 'superadmin'
 
   useEffect(() => {
-    if (user) {
+    if (!authIsLoading) {
       fetchDashboardData()
     }
-  }, [user])
+  }, [authIsLoading])
 
   useEffect(() => {
     filterTransactions()

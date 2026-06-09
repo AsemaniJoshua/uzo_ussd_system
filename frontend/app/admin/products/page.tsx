@@ -28,7 +28,7 @@ export default function ServedProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedNetwork, setSelectedNetwork] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const { user } = useAuth()
+  const { user, isLoading: authIsLoading } = useAuth()
   const isStaff = user?.role !== 'superadmin'
   
   // Pagination state
@@ -36,10 +36,10 @@ export default function ServedProductsPage() {
   const itemsPerPage = 50
 
   useEffect(() => {
-    if (user) {
+    if (!authIsLoading) {
       fetchProducts()
     }
-  }, [user])
+  }, [authIsLoading])
 
   useEffect(() => {
     filterTransactions()
