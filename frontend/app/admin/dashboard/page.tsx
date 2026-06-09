@@ -274,13 +274,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              icon={PackageIcon}
-              title="Total Packages"
-              value={stats.totalPackages}
-              color="bg-blue-500"
-            />
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${isStaff ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-6`}>
+            {!isStaff && (
+              <StatCard
+                icon={PackageIcon}
+                title="Total Packages"
+                value={stats.totalPackages}
+                color="bg-blue-500"
+              />
+            )}
             <StatCard
               icon={CreditCard}
               title="Total Transactions"
@@ -293,12 +295,14 @@ export default function AdminDashboard() {
               value={formatCurrency(stats.totalRevenue)}
               color="bg-purple-500"
             />
-            <StatCard
-              icon={Activity}
-              title="Pending Transactions"
-              value={stats.pendingTransactions}
-              color="bg-orange-500"
-            />
+            {!isStaff && (
+              <StatCard
+                icon={Activity}
+                title="Pending Transactions"
+                value={stats.pendingTransactions}
+                color="bg-orange-500"
+              />
+            )}
           </div>
 
           {/* Search Filter */}
