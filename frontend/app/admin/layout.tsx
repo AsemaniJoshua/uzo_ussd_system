@@ -9,18 +9,25 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   // Don't apply auth checks to the login page itself
   const isLoginPage = pathname === '/admin/login'
+  
+  const allowedForStaff = ['/admin/dashboard', '/admin/products', '/admin/transactions']
 
   useEffect(() => {
     if (!isLoginPage && !isLoading && !isAuthenticated) {
       router.push('/admin/login')
+    } else if (isAuthenticated && user?.role === 'staff' && !isLoginPage) {
+      const isAllowed = allowedForStaff.some(route => pathname === route || pathname.startsWith(route + '/'))
+      if (!isAllowed) {
+        router.push('/admin/dashboard')
+      }
     }
-  }, [isAuthenticated, isLoading, router, isLoginPage])
+  }, [isAuthenticated, isLoading, router, isLoginPage, pathname, user?.role])
 
   // Don't show loading spinner on login page
   if (!isLoginPage && isLoading) {

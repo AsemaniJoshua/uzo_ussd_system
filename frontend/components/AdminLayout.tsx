@@ -18,14 +18,14 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Packages', href: '/admin/packages', icon: Package },
-  { name: 'Served Products', href: '/admin/products', icon: Package },
-  { name: 'Transactions', href: '/admin/transactions', icon: CreditCard },
-  // { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database },
-  { name: 'Admins', href: '/admin/admins', icon: Users },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+const allNavigation = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, roles: ['superadmin', 'staff'] },
+  { name: 'Packages', href: '/admin/packages', icon: Package, roles: ['superadmin'] },
+  { name: 'Served Products', href: '/admin/products', icon: Package, roles: ['superadmin', 'staff'] },
+  { name: 'Transactions', href: '/admin/transactions', icon: CreditCard, roles: ['superadmin', 'staff'] },
+  // { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database, roles: ['superadmin'] },
+  { name: 'Admins', href: '/admin/admins', icon: Users, roles: ['superadmin'] },
+  { name: 'Settings', href: '/admin/settings', icon: Settings, roles: ['superadmin'] },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -71,7 +71,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
+            {allNavigation
+              .filter(item => item.roles.includes(user?.role || 'staff'))
+              .map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <a
