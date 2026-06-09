@@ -227,7 +227,7 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                           {isStaff
-                            ? transaction.profit_amount != null
+                            ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
                               ? formatCurrency(Number(transaction.profit_amount))
                               : '-'
                             : formatCurrency(Number(transaction.amount))}
@@ -353,7 +353,7 @@ function TransactionModal({
                 <label className="block text-sm font-medium text-gray-500">{isStaff ? 'Profit' : 'Amount'}</label>
                 <p className="text-lg font-semibold text-gray-900">
                   {isStaff
-                    ? transaction.profit_amount != null
+                    ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
                       ? formatCurrency(Number(transaction.profit_amount))
                       : '-'
                     : formatCurrency(Number(transaction.amount))}

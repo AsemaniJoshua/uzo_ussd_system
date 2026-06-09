@@ -72,7 +72,9 @@ export default function AdminDashboard() {
       // Calculate total revenue from PAID transactions (not yet served)
       // If user is staff, sum up profit_amount instead of total amount
       const totalRevenue = paidTransactions.reduce((sum, tx) => {
-        const val = isStaff ? (tx.profit_amount || 0) : tx.amount;
+        const val = isStaff 
+          ? (tx.profit_amount !== null && tx.profit_amount !== undefined && tx.profit_amount !== '' ? tx.profit_amount : 0) 
+          : tx.amount;
         return sum + Number(val);
       }, 0)
 
@@ -430,7 +432,7 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {isStaff
-                                  ? transaction.profit_amount != null
+                                  ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
                                     ? formatCurrency(Number(transaction.profit_amount))
                                     : '-'
                                   : formatCurrency(Number(transaction.amount))}
@@ -535,7 +537,7 @@ export default function AdminDashboard() {
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
                           {isStaff
-                            ? selectedTransaction.profit_amount != null
+                            ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== '' && Number(selectedTransaction.profit_amount) !== 0)
                               ? formatCurrency(Number(selectedTransaction.profit_amount))
                               : '-'
                             : formatCurrency(Number(selectedTransaction.amount))}
