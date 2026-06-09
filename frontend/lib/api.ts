@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import { Package, PackageCreate, PackageUpdate, Transaction, AdminUser, AdminCreate, Token, LoginCredentials, NetworkEnum } from '@/types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api1.glosservice.site'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api2.netservicedata.site'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
