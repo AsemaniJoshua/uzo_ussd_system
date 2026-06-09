@@ -293,7 +293,7 @@ export default function AdminDashboard() {
             />
             <StatCard
               icon={DollarSign}
-              title={isStaff ? "Total Profit" : "Total Revenue"}
+              title="Total Revenue"
               value={formatCurrency(stats.totalRevenue)}
               color="bg-purple-500"
             />
@@ -387,7 +387,7 @@ export default function AdminDashboard() {
                               Recipient
                             </th>
                             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              {isStaff ? 'Profit' : 'Amount'}
+                              Amount
                             </th>
                             <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Time
@@ -432,7 +432,9 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {isStaff
-                                  ? formatCurrency(transaction.profit_amount ?? 0)
+                                  ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                                    ? formatCurrency(transaction.profit_amount)
+                                    : '-'
                                   : formatCurrency(transaction.amount)}
                               </td>
                               <td className="hidden sm:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -531,11 +533,13 @@ export default function AdminDashboard() {
 
                       <div>
                         <p className="text-xs text-gray-600 uppercase font-semibold">
-                          {isStaff ? 'Profit' : 'Amount'}
+                          Amount
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
                           {isStaff
-                            ? formatCurrency(selectedTransaction.profit_amount ?? 0)
+                            ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== 0)
+                              ? formatCurrency(selectedTransaction.profit_amount)
+                              : '-'
                             : formatCurrency(selectedTransaction.amount)}
                         </p>
                       </div>

@@ -173,7 +173,7 @@ export default function TransactionsPage() {
                         Network
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {isStaff ? 'Profit' : 'Amount'}
+                        Amount
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
@@ -229,7 +229,9 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                           {isStaff
-                            ? formatCurrency(transaction.profit_amount ?? 0)
+                            ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                              ? formatCurrency(transaction.profit_amount)
+                              : '-'
                             : formatCurrency(transaction.amount)}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap">
@@ -350,10 +352,12 @@ function TransactionModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500">{isStaff ? 'Profit' : 'Amount'}</label>
+                <label className="block text-sm font-medium text-gray-500">Amount</label>
                 <p className="text-lg font-semibold text-gray-900">
                   {isStaff
-                    ? formatCurrency(transaction.profit_amount ?? 0)
+                    ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                      ? formatCurrency(transaction.profit_amount)
+                      : '-'
                     : formatCurrency(transaction.amount)}
                 </p>
               </div>

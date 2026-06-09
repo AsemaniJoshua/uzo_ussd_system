@@ -91,13 +91,13 @@ export default function ServedProductsPage() {
 
   const handleExportCSV = () => {
     try {
-      const headers = ['User', 'Package', 'Network', 'Recipient', isStaff ? 'Profit' : 'Amount', 'Status', 'Date']
+      const headers = ['User', 'Package', 'Network', 'Recipient', 'Amount', 'Status', 'Date']
       const csvData = filteredTransactions.map(tx => [
         `="${tx.user_msisdn}"`,
         `="${tx.package_name}"`,
         tx.network,
         `="${tx.recipient}"`,
-        isStaff ? (tx.profit_amount ?? 0) : tx.amount,
+        isStaff ? (tx.profit_amount !== null && tx.profit_amount !== undefined && tx.profit_amount !== 0 ? tx.profit_amount : '-') : tx.amount,
         'Served',
         new Date(tx.served_at || tx.created_at).toLocaleDateString(),
       ])
@@ -268,7 +268,7 @@ export default function ServedProductsPage() {
                           Recipient
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {isStaff ? 'Profit' : 'Amount'}
+                          Amount
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
@@ -307,7 +307,9 @@ export default function ServedProductsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {isStaff
-                              ? formatCurrency(transaction.profit_amount ?? 0)
+                              ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                                ? formatCurrency(transaction.profit_amount)
+                                : '-'
                               : formatCurrency(transaction.amount)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -496,11 +498,13 @@ export default function ServedProductsPage() {
 
                     <div>
                       <p className="text-xs text-gray-600 uppercase font-semibold">
-                        {isStaff ? 'Profit' : 'Amount'}
+                        Amount
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {isStaff
-                          ? formatCurrency(selectedTransaction.profit_amount ?? 0)
+                          ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== 0)
+                            ? formatCurrency(selectedTransaction.profit_amount)
+                            : '-'
                           : formatCurrency(selectedTransaction.amount)}
                       </p>
                     </div>
