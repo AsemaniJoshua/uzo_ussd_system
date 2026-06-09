@@ -29,6 +29,7 @@ class AdminOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: Optional[AdminOut] = None
 
 class PasswordUpdate(BaseModel):
     current_password: str
