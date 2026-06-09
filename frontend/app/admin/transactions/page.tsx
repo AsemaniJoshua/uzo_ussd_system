@@ -227,10 +227,10 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                           {isStaff
-                            ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
-                              ? formatCurrency(Number(transaction.profit_amount))
+                            ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                              ? formatCurrency(transaction.profit_amount)
                               : '-'
-                            : formatCurrency(Number(transaction.amount))}
+                            : formatCurrency(transaction.amount)}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(transaction.status ?? 'PENDING')}`}>
@@ -353,10 +353,10 @@ function TransactionModal({
                 <label className="block text-sm font-medium text-gray-500">{isStaff ? 'Profit' : 'Amount'}</label>
                 <p className="text-lg font-semibold text-gray-900">
                   {isStaff
-                    ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
-                      ? formatCurrency(Number(transaction.profit_amount))
+                    ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                      ? formatCurrency(transaction.profit_amount)
                       : '-'
-                    : formatCurrency(Number(transaction.amount))}
+                    : formatCurrency(transaction.amount)}
                 </p>
               </div>
 

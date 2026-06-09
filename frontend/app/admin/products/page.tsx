@@ -95,7 +95,7 @@ export default function ServedProductsPage() {
         `="${tx.package_name}"`,
         tx.network,
         `="${tx.recipient}"`,
-        isStaff ? (tx.profit_amount !== null && tx.profit_amount !== undefined && tx.profit_amount !== '' && Number(tx.profit_amount) !== 0 ? tx.profit_amount : '-') : tx.amount,
+        isStaff ? (tx.profit_amount !== null && tx.profit_amount !== undefined && tx.profit_amount !== 0 ? tx.profit_amount : '-') : tx.amount,
         'Served',
         new Date(tx.served_at || tx.created_at).toLocaleDateString(),
       ])
@@ -305,10 +305,10 @@ export default function ServedProductsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {isStaff
-                              ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== '' && Number(transaction.profit_amount) !== 0)
-                                ? formatCurrency(Number(transaction.profit_amount))
+                              ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
+                                ? formatCurrency(transaction.profit_amount)
                                 : '-'
-                              : formatCurrency(Number(transaction.amount))}
+                              : formatCurrency(transaction.amount)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -500,10 +500,10 @@ export default function ServedProductsPage() {
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {isStaff
-                          ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== '' && Number(selectedTransaction.profit_amount) !== 0)
-                            ? formatCurrency(Number(selectedTransaction.profit_amount))
+                          ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== 0)
+                            ? formatCurrency(selectedTransaction.profit_amount)
                             : '-'
-                          : formatCurrency(Number(selectedTransaction.amount))}
+                          : formatCurrency(selectedTransaction.amount)}
                       </p>
                     </div>
 
