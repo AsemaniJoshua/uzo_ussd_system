@@ -29,15 +29,17 @@ export default function ServedProductsPage() {
   const [selectedNetwork, setSelectedNetwork] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const { user } = useAuth()
-  const isStaff = user?.role === 'staff'
+  const isStaff = user?.role !== 'superadmin'
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 50
 
   useEffect(() => {
-    fetchProducts()
-  }, [])
+    if (user) {
+      fetchProducts()
+    }
+  }, [user])
 
   useEffect(() => {
     filterTransactions()
@@ -95,7 +97,7 @@ export default function ServedProductsPage() {
         `="${tx.package_name}"`,
         tx.network,
         `="${tx.recipient}"`,
-        isStaff ? (tx.profit_amount !== null && tx.profit_amount !== undefined && tx.profit_amount !== 0 ? tx.profit_amount : '-') : tx.amount,
+        isStaff ? (tx.profit_amount ?? 0) : tx.amount,
         'Served',
         new Date(tx.served_at || tx.created_at).toLocaleDateString(),
       ])
@@ -305,9 +307,7 @@ export default function ServedProductsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {isStaff
-                              ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
-                                ? formatCurrency(transaction.profit_amount)
-                                : '-'
+                              ? formatCurrency(transaction.profit_amount ?? 0)
                               : formatCurrency(transaction.amount)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -500,9 +500,7 @@ export default function ServedProductsPage() {
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {isStaff
-                          ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== 0)
-                            ? formatCurrency(selectedTransaction.profit_amount)
-                            : '-'
+                          ? formatCurrency(selectedTransaction.profit_amount ?? 0)
                           : formatCurrency(selectedTransaction.amount)}
                       </p>
                     </div>

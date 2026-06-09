@@ -43,11 +43,13 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState('')
   const { user } = useAuth()
-  const isStaff = user?.role === 'staff'
+  const isStaff = user?.role !== 'superadmin'
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    if (user) {
+      fetchDashboardData()
+    }
+  }, [user])
 
   useEffect(() => {
     filterTransactions()
@@ -430,9 +432,7 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {isStaff
-                                  ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
-                                    ? formatCurrency(transaction.profit_amount)
-                                    : '-'
+                                  ? formatCurrency(transaction.profit_amount ?? 0)
                                   : formatCurrency(transaction.amount)}
                               </td>
                               <td className="hidden sm:table-cell px-3 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -535,9 +535,7 @@ export default function AdminDashboard() {
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
                           {isStaff
-                            ? (selectedTransaction.profit_amount !== null && selectedTransaction.profit_amount !== undefined && selectedTransaction.profit_amount !== 0)
-                              ? formatCurrency(selectedTransaction.profit_amount)
-                              : '-'
+                            ? formatCurrency(selectedTransaction.profit_amount ?? 0)
                             : formatCurrency(selectedTransaction.amount)}
                         </p>
                       </div>

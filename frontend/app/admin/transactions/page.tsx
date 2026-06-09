@@ -26,11 +26,13 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const { user } = useAuth()
-  const isStaff = user?.role === 'staff'
+  const isStaff = user?.role !== 'superadmin'
 
   useEffect(() => {
-    fetchTransactions()
-  }, [])
+    if (user) {
+      fetchTransactions()
+    }
+  }, [user])
 
   useEffect(() => {
     filterTransactions()
@@ -227,9 +229,7 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                           {isStaff
-                            ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
-                              ? formatCurrency(transaction.profit_amount)
-                              : '-'
+                            ? formatCurrency(transaction.profit_amount ?? 0)
                             : formatCurrency(transaction.amount)}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap">
@@ -290,7 +290,7 @@ function TransactionModal({
   onClose: () => void
 }) {
   const { user } = useAuth()
-  const isStaff = user?.role === 'staff'
+  const isStaff = user?.role !== 'superadmin'
 
   if (!transaction) return null
 
@@ -353,9 +353,7 @@ function TransactionModal({
                 <label className="block text-sm font-medium text-gray-500">{isStaff ? 'Profit' : 'Amount'}</label>
                 <p className="text-lg font-semibold text-gray-900">
                   {isStaff
-                    ? (transaction.profit_amount !== null && transaction.profit_amount !== undefined && transaction.profit_amount !== 0)
-                      ? formatCurrency(transaction.profit_amount)
-                      : '-'
+                    ? formatCurrency(transaction.profit_amount ?? 0)
                     : formatCurrency(transaction.amount)}
                 </p>
               </div>
