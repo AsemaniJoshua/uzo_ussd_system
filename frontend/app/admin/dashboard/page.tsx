@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     if (!authIsLoading) {
       fetchDashboardData()
     }
-  }, [authIsLoading])
+  }, [authIsLoading, user])
 
   useEffect(() => {
     filterTransactions()

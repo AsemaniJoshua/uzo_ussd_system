@@ -39,7 +39,7 @@ export default function ServedProductsPage() {
     if (!authIsLoading) {
       fetchProducts()
     }
-  }, [authIsLoading])
+  }, [authIsLoading, user])
 
   useEffect(() => {
     filterTransactions()

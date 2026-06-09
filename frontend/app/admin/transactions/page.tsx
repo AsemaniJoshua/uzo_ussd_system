@@ -32,7 +32,7 @@ export default function TransactionsPage() {
     if (!authIsLoading) {
       fetchTransactions()
     }
-  }, [authIsLoading])
+  }, [authIsLoading, user])
 
   useEffect(() => {
     filterTransactions()
