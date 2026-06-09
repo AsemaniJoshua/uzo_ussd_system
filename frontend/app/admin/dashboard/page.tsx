@@ -74,8 +74,9 @@ export default function AdminDashboard() {
       // Calculate total revenue from PAID transactions (not yet served)
       // If user is staff, sum up profit_amount instead of total amount
       const totalRevenue = paidTransactions.reduce((sum, tx) => {
-        const val = isStaff ? (tx.profit_amount ?? 0) : tx.amount;
-        return sum + Number(val);
+        const val = isStaff ? (tx.profit_amount ?? 0) : (tx.amount ?? 0);
+        const num = Number(val);
+        return sum + (isNaN(num) ? 0 : num);
       }, 0)
 
       setStats({
