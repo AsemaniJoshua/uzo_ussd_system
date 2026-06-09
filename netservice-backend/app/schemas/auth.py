@@ -20,8 +20,8 @@ class AdminOut(BaseModel):
     id: int
     username: str
     role: AdminRole
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
