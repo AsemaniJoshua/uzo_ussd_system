@@ -144,3 +144,54 @@ async def verify_payment(transaction_id: str):
         r = await client.get(url, headers=headers)
         r.raise_for_status()
         return r.json()
+
+
+async def initiate_checkout_payment(amount_ghs: float, tx_id: str | int, desc: str, redirect_url: str, email: str):
+    """
+    Initiate a web checkout session with TheTeller standard checkout.
+    """
+    if settings.THETELLER_BASE_URL and "test" in settings.THETELLER_BASE_URL.lower():
+        checkout_base = "https://checkout-test.theteller.net"
+    else:
+        checkout_base = "https://checkout.theteller.net"
+        
+    url = f"{checkout_base}/initiate"
+    
+    headers = {
+        "Authorization": _theteller_auth_header(),
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    
+    payload = {
+        "merchant_id": settings.THETELLER_MERCHANT_ID,
+        "transaction_id": _format_tx_id(tx_id),
+        "desc": desc,
+        "amount": _format_amount(amount_ghs),
+        "redirect_url": redirect_url,
+        "email": email
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            print(f"TheTeller Checkout Request URL: {url}")
+            print(f"TheTeller Checkout Payload: {payload}")
+            
+            r = await client.post(url, json=payload, headers=headers)
+            
+            print(f"TheTeller Checkout Response Status: {r.status_code}")
+            print(f"TheTeller Checkout Response Body: {r.text}")
+            
+            if r.status_code != 200:
+                raise Exception(f"TheTeller Checkout API error: {r.status_code} - {r.text}")
+                
+            return r.json()
+    except httpx.HTTPError as e:
+        error_msg = f"HTTP Error calling TheTeller Checkout: {type(e).__name__}: {str(e)}"
+        print(error_msg)
+        raise Exception(error_msg) from e
+    except Exception as e:
+        error_msg = f"Error calling TheTeller Checkout API: {type(e).__name__}: {str(e)}"
+        print(error_msg)
+        raise Exception(error_msg) from e
+
