@@ -234,24 +234,21 @@ export default function App() {
               </button>
               <button 
                 onClick={() => {
-                  setCurrentPage('status')
-                  setPollingStatus('idle')
-                  setTxDetails(null)
-                  setSearchRef('')
+                  setCurrentPage('support')
                 }}
                 className={`text-sm font-semibold transition-colors cursor-pointer ${
-                  currentPage === 'status' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
+                  currentPage === 'support' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Check Status
+                Support
               </button>
             </div>
 
             {/* Header Right Tag */}
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full border border-emerald-200 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                Secure Checkout
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                System Active
               </div>
               <button 
                 onClick={() => {
@@ -299,14 +296,11 @@ export default function App() {
                   </button>
                   <button 
                     onClick={() => {
-                      setCurrentPage('status')
-                      setPollingStatus('idle')
-                      setTxDetails(null)
-                      setSearchRef('')
+                      setCurrentPage('support')
                     }}
                     className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                   >
-                    Verify Order Status
+                    Help & Support Center
                   </button>
                 </div>
               </div>
@@ -355,8 +349,8 @@ export default function App() {
                 <div className="grid md:grid-cols-3 gap-8">
                   {[
                     { step: '1', title: 'Pick Network & Plan', desc: 'Select your service operator (MTN, Telecel, AT) and search for the bundle size you require.' },
-                    { step: '2', title: 'Secure Checkout', desc: 'Input the recipient mobile number and pay securely via theTeller Standard hosted payment page.' },
-                    { step: '3', title: 'Instant Delivery', desc: 'Once checkout is approved, the data bundle is credited to the phone number immediately.' }
+                    { step: '2', title: 'Make Payment', desc: 'Input the recipient mobile number and complete the payment checkout securely.' },
+                    { step: '3', title: 'Instant Delivery', desc: 'Once your payment transaction is completed, the data bundle is credited to the phone number immediately.' }
                   ].map((card, i) => (
                     <div key={i} className="bg-white border border-slate-200/60 rounded-xl p-8 shadow-sm text-left">
                       <div className="w-10 h-10 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center mb-6">
@@ -375,9 +369,9 @@ export default function App() {
               <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-16">Frequently Asked Questions</h2>
               <div className="space-y-6">
                 {[
-                  { q: 'How long does it take for my data to arrive?', a: 'Typically under 60 seconds after completing the payment checkout. Our servers process the transaction immediately upon validation.' },
-                  { q: 'Can I pay using cards?', a: 'Yes! TheTeller Checkout supports Visa/Mastercard payments as well as mobile money options for MTN, Telecel, and AT Money.' },
-                  { q: 'What happens if my transaction fails?', a: 'If a payment fails or is cancelled, no funds are captured. If you are debited but do not receive the bundle, check status page or contact our support team.' }
+                  { q: 'How long does it take for my data to arrive?', a: 'Typically under 60 seconds after completing checkout. Our systems process the transaction immediately.' },
+                  { q: 'Can I pay using cards?', a: 'Yes! The checkout portal supports Visa and Mastercard payments as well as mobile money options for MTN, Telecel, and AT Money.' },
+                  { q: 'What happens if my transaction fails?', a: 'If a payment fails or is cancelled, no funds are captured. If you are debited but do not receive the bundle, reach out directly to our support team.' }
                 ].map((faq, i) => (
                   <div key={i} className="bg-white border border-slate-200/80 rounded-xl p-6 shadow-sm">
                     <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 mb-2">
@@ -471,7 +465,7 @@ export default function App() {
                         return (
                           <button
                             key={pkg.id}
-                            type="button;button"
+                            type="button"
                             onClick={() => setSelectedPackage(pkg)}
                             className={`flex items-center justify-between p-4 rounded-xl border text-left cursor-pointer transition-all ${
                               isSelected 
@@ -556,50 +550,22 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW C: CHECK PAYMENT STATUS */}
+        {/* VIEW C: CHECK PAYMENT STATUS (DYNAMIC REDIRECT CONFIRMATION ONLY) */}
         {currentPage === 'status' && (
           <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-xl mx-auto">
-            
-            {/* Search card */}
-            <div className="card-clean p-6 bg-white mb-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Check Order Status</h2>
-              <p className="text-sm text-slate-500 mb-4">Paste theTeller payment transaction reference or ID to verify real-time status.</p>
-              
-              <form onSubmit={handleManualSearch} className="flex gap-2">
-                <div className="relative flex-grow">
-                  <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="e.g. 123456789012"
-                    value={searchRef}
-                    onChange={(e) => setSearchRef(e.target.value)}
-                    required
-                    className="pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 text-sm w-full focus:border-blue-500"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold cursor-pointer transition-colors"
-                >
-                  Lookup
-                </button>
-              </form>
-            </div>
-
-            {/* Polling view state panels */}
             {pollingStatus !== 'idle' && (
               <div className="card-clean p-6 sm:p-8 bg-white text-center">
                 {pollingStatus === 'polling' && (
                   <>
                     <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-                    <h3 className="font-bold text-slate-950 mb-1.5">Checking status...</h3>
-                    <p className="text-xs text-slate-500">Checking payment gateway. Please remain on this screen.</p>
+                    <h3 className="font-bold text-slate-950 mb-1.5">Checking payment status...</h3>
+                    <p className="text-xs text-slate-500">Checking checkout gate. Please remain on this screen.</p>
                   </>
                 )}
 
                 {pollingStatus === 'paid' && (
                   <>
-                    <div className="w-12 h-12 bg-emerald-150 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Check className="w-6 h-6 stroke-[3]" />
                     </div>
                     <h3 className="font-bold text-slate-950 text-lg mb-1">Purchase Successful</h3>
@@ -620,7 +586,7 @@ export default function App() {
                           <span className="text-blue-600 font-bold">{formatCurrency(txDetails.amount)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Reference Ref:</span>
+                          <span className="text-slate-400">Reference:</span>
                           <span className="text-slate-800 font-semibold font-mono">{txDetails.payment_reference}</span>
                         </div>
                       </div>
@@ -648,7 +614,7 @@ export default function App() {
                     </div>
                     <h3 className="font-bold text-slate-950 text-lg mb-1.5">Checkout Failed</h3>
                     <p className="text-xs text-slate-500 mb-6">
-                      {statusMessage || 'The gateway canceled this payment, or you entered an incorrect mobile money PIN.'}
+                      {statusMessage || 'The checkout portal canceled this transaction, or you entered an incorrect mobile money PIN.'}
                     </p>
                     <button
                       onClick={() => {
@@ -664,11 +630,61 @@ export default function App() {
                 )}
               </div>
             )}
-
           </div>
         )}
 
-        {/* VIEW D: GATEWAY REDIRECTING */}
+        {/* VIEW D: HELP & SUPPORT PAGE (STATIC VIEW) */}
+        {currentPage === 'support' && (
+          <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 card-clean p-6 sm:p-8 bg-white">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Help & Support</h2>
+              <p className="text-sm text-slate-500 mb-6">Have questions or need assistance? Fill out the form below to get in touch with our team.</p>
+              
+              <form onSubmit={(e) => { e.preventDefault(); alert("Thank you for contacting support. We will get back to you shortly."); e.target.reset(); }} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-2">Full Name</label>
+                  <input type="text" placeholder="John Doe" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-2">Email Address</label>
+                  <input type="email" placeholder="john@example.com" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-2">Message</label>
+                  <textarea rows="4" placeholder="How can we help you today?" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 resize-none focus:outline-none"></textarea>
+                </div>
+                <button type="submit" className="btn-primary w-full py-3 rounded-lg text-sm font-bold cursor-pointer">
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            <div className="space-y-6">
+              <div className="card-clean p-6 bg-white">
+                <h3 className="font-bold text-slate-900 text-base mb-3">Contact Info</h3>
+                <div className="space-y-4 text-sm text-slate-600">
+                  <div>
+                    <span className="font-semibold block text-slate-800 text-xs uppercase tracking-wider mb-1">Email Support</span>
+                    <span className="text-slate-600">support@netservicedata.site</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold block text-slate-800 text-xs uppercase tracking-wider mb-1">Business Hours</span>
+                    <span className="text-slate-600">Monday - Sunday, 24/7 Available</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-clean p-6 bg-white">
+                <h3 className="font-bold text-slate-900 text-base mb-3">Quick Help</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  For issues regarding delivery delays, please include the recipient phone number in your support request.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VIEW E: GATEWAY REDIRECTING */}
         {currentPage === 'redirecting' && (
           <div className="py-24 px-4 text-center max-w-md mx-auto">
             <div className="card-clean p-8 bg-white">
@@ -701,7 +717,7 @@ export default function App() {
             <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-4">Product</h4>
             <ul className="space-y-2.5 text-xs text-slate-500">
               <li><button onClick={() => setCurrentPage('buy')} className="hover:text-slate-900 cursor-pointer">Buy Bundles</button></li>
-              <li><button onClick={() => setCurrentPage('status')} className="hover:text-slate-900 cursor-pointer">Check Order Status</button></li>
+              <li><button onClick={() => setCurrentPage('support')} className="hover:text-slate-900 cursor-pointer font-medium text-left">Help & Support</button></li>
               <li><a href="#" className="hover:text-slate-900">Coverage Checker</a></li>
             </ul>
           </div>
@@ -716,10 +732,10 @@ export default function App() {
           </div>
 
           <div>
-            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-4">Secure Network</h4>
-            <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-150 text-xs font-semibold">
-              <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-              <span>Payments secured by theTeller Standard Checkout API</span>
+            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-4">Secure Transactions</h4>
+            <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold">
+              <ShieldCheck className="w-5 h-5 flex-shrink-0 text-slate-500" />
+              <span>100% Encrypted Transactions</span>
             </div>
           </div>
 
