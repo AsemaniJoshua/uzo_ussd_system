@@ -246,10 +246,6 @@ export default function App() {
 
             {/* Header Right Tag */}
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full border border-emerald-200 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                System Active
-              </div>
               <button 
                 onClick={() => {
                   setCurrentPage('buy')
@@ -270,26 +266,41 @@ export default function App() {
         {/* VIEW A: HOME PAGE */}
         {currentPage === 'home' && (
           <div>
-            {/* Hero Section */}
-            <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200 mb-6">
+            {/* Hero Section with Background Video */}
+            <section className="relative bg-slate-900 text-white py-24 sm:py-36 overflow-hidden">
+              {/* Background Video */}
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="absolute inset-0 w-full h-full object-cover opacity-35"
+              >
+                <source src="https://player.vimeo.com/external/373226032.hd.mp4?s=e76f44fa29d61448d208dcb17afe5b77e77ca9dd&profile_id=174" type="video/mp4" />
+              </video>
+              
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent animate-fade-in"></div>
+
+              {/* Hero Content */}
+              <div className="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+                <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-300 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-500/20 mb-6 backdrop-blur-sm">
                   <Zap className="w-3.5 h-3.5" /> High-speed internet packages at best price
                 </div>
-                <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-none mb-6">
+                <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-none mb-6">
                   Purchase Mobile Data <br />
-                  <span className="text-blue-600">Instantly & Securely</span>
+                  <span className="text-blue-455 text-blue-400">Instantly & Securely</span>
                 </h1>
-                <p className="text-slate-600 text-lg leading-relaxed mb-8 max-w-lg">
+                <p className="text-slate-350 text-slate-350 text-slate-300 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
                   Get high-speed data bundles delivered straight to your number. Supported across MTN, Telecel, and AT networks. No logins, no waiting.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button 
                     onClick={() => {
                       setCurrentPage('buy')
                       setNetwork('MTN')
                     }}
-                    className="btn-primary px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-500/10 cursor-pointer"
+                    className="btn-primary px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 cursor-pointer"
                   >
                     Buy Data Now
                     <ArrowRight className="w-5 h-5" />
@@ -298,43 +309,30 @@ export default function App() {
                     onClick={() => {
                       setCurrentPage('support')
                     }}
-                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer backdrop-blur-sm"
                   >
                     Help & Support Center
                   </button>
                 </div>
               </div>
+            </section>
 
-              {/* Hero Right Visual Card */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-100/50 relative">
-                <div className="absolute top-4 right-4 bg-blue-50 text-blue-700 p-2 rounded-lg border border-blue-100">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 mb-4">Supported Networks</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 text-yellow-700 font-bold flex items-center justify-center">MTN</div>
-                      <span className="font-semibold text-slate-800">MTN Ghana</span>
-                    </div>
-                    <span className="text-xs font-semibold text-yellow-700 bg-yellow-500/15 px-2.5 py-1 rounded-full">Active</span>
+            {/* Active Networks Bar */}
+            <section className="bg-white border-b border-slate-200 py-8 px-4 sm:px-6 lg:px-8">
+              <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                <span className="font-bold text-slate-400 text-sm uppercase tracking-wider">Supported Networks:</span>
+                <div className="flex flex-wrap justify-center gap-6 md:gap-12">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-700 font-bold flex items-center justify-center text-xs">MTN</div>
+                    <span className="font-semibold text-slate-700 text-sm">MTN Ghana</span>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-red-500/20 text-red-700 font-bold flex items-center justify-center">TC</div>
-                      <span className="font-semibold text-slate-800">Telecel Ghana</span>
-                    </div>
-                    <span className="text-xs font-semibold text-red-700 bg-red-500/15 px-2.5 py-1 rounded-full">Active</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-700 font-bold flex items-center justify-center text-xs">TC</div>
+                    <span className="font-semibold text-slate-700 text-sm">Telecel Ghana</span>
                   </div>
-
-                  <div className="flex items-center justify-between p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-700 font-bold flex items-center justify-center">AT</div>
-                      <span className="font-semibold text-slate-800">AT Money</span>
-                    </div>
-                    <span className="text-xs font-semibold text-blue-700 bg-blue-500/15 px-2.5 py-1 rounded-full">Active</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-700 font-bold flex items-center justify-center text-xs">AT</div>
+                    <span className="font-semibold text-slate-700 text-sm">AT Money</span>
                   </div>
                 </div>
               </div>
