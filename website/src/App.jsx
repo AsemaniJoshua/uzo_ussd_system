@@ -328,7 +328,7 @@ export default function App() {
                 playsInline 
                 className="absolute inset-0 w-full h-full object-cover opacity-35"
               >
-                <source src="https://player.vimeo.com/external/409217036.sd.mp4?s=7b9da2977b31ad546b5a39cbfa2b415a77fae93f&profile_id=165" type="video/mp4" />
+                <source src="./hero-bg.mp4" type="video/mp4" />
               </video>
               
               {/* Overlay Gradient */}
@@ -369,22 +369,56 @@ export default function App() {
               </div>
             </section>
 
-            {/* Active Networks Bar */}
-            <section className="bg-white border-b border-slate-200 py-8 px-4 sm:px-6 lg:px-8">
-              <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <span className="font-bold text-slate-400 text-sm uppercase tracking-wider">Supported Networks:</span>
-                <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-                  <div className="flex items-center gap-2.5">
-                    {NETWORK_LOGOS.MTN()}
-                    <span className="font-semibold text-slate-700 text-sm">MTN Ghana</span>
+            {/* Active Networks Bar - Re-designed to be bigger and more premium */}
+            <section className="bg-white border-b border-slate-200/80 py-16 px-4 sm:px-6 lg:px-8">
+              <div className="max-w-6xl mx-auto text-center">
+                <h3 className="font-bold text-slate-400 text-xs sm:text-sm uppercase tracking-widest mb-10">
+                  Supported Network Partners
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
+                  {/* MTN Card */}
+                  <div 
+                    onClick={() => {
+                      setCurrentPage('buy')
+                      setNetwork('MTN')
+                    }}
+                    className="group relative flex flex-col items-center p-8 rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-slate-200/80 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="mb-4">
+                      {NETWORK_LOGOS.MTN("w-16 h-16 rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-300")}
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg mb-1">MTN Ghana</span>
+                    <span className="text-xs text-blue-600 font-semibold group-hover:underline">Select packages &rarr;</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    {NETWORK_LOGOS.TELECEL()}
-                    <span className="font-semibold text-slate-700 text-sm">Telecel Ghana</span>
+
+                  {/* Telecel Card */}
+                  <div 
+                    onClick={() => {
+                      setCurrentPage('buy')
+                      setNetwork('TELECEL')
+                    }}
+                    className="group relative flex flex-col items-center p-8 rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-slate-200/80 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="mb-4">
+                      {NETWORK_LOGOS.TELECEL("w-16 h-16 rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-300")}
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg mb-1">Telecel Ghana</span>
+                    <span className="text-xs text-blue-600 font-semibold group-hover:underline">Select packages &rarr;</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    {NETWORK_LOGOS.AT()}
-                    <span className="font-semibold text-slate-700 text-sm">AT Money</span>
+
+                  {/* AT Card */}
+                  <div 
+                    onClick={() => {
+                      setCurrentPage('buy')
+                      setNetwork('AT')
+                    }}
+                    className="group relative flex flex-col items-center p-8 rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-slate-200/80 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="mb-4">
+                      {NETWORK_LOGOS.AT("w-16 h-16 rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-300")}
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg mb-1">AT Money</span>
+                    <span className="text-xs text-blue-600 font-semibold group-hover:underline">Select packages &rarr;</span>
                   </div>
                 </div>
               </div>
@@ -419,7 +453,7 @@ export default function App() {
               <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-16">Frequently Asked Questions</h2>
               <div className="space-y-6">
                 {[
-                  { q: 'How long does it take for my data to arrive?', a: 'Typically under 60 seconds after completing checkout. Our systems process the transaction immediately.' },
+                  { q: 'How long does it take for my data to arrive?', a: 'Typically under 30 minutes after completing checkout. Our systems process the transaction immediately.' },
                   { q: 'Can I pay using cards?', a: 'Yes! The checkout portal supports Visa and Mastercard payments as well as mobile money options for MTN, Telecel, and AT Money.' },
                   { q: 'What happens if my transaction fails?', a: 'If a payment fails or is cancelled, no funds are captured. If you are debited but do not receive the bundle, reach out directly to our support team.' }
                 ].map((faq, i) => (
