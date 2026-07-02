@@ -15,6 +15,7 @@ import {
   LogOut,
   Users,
   Database,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -23,10 +24,12 @@ const allNavigation = [
   { name: 'Packages', href: '/admin/packages', icon: Package, roles: ['superadmin'] },
   { name: 'Served Products', href: '/admin/products', icon: Package, roles: ['superadmin', 'staff'] },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCard, roles: ['superadmin', 'staff'] },
+  { name: 'Support Inquiries', href: '/admin/support', icon: Mail, roles: ['superadmin'] },
   // { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database, roles: ['superadmin'] },
   { name: 'Admins', href: '/admin/admins', icon: Users, roles: ['superadmin'] },
   { name: 'Settings', href: '/admin/settings', icon: Settings, roles: ['superadmin'] },
 ]
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)

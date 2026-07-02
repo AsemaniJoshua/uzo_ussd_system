@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routers import ussd, webhook, admin
+from app.api.routers import ussd, webhook, admin, support
 from app.api.routers import packages
 from app.core.config import settings
 from app.db.base import Base
@@ -25,6 +25,8 @@ app.include_router(ussd.router, prefix="")
 app.include_router(webhook.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(packages.router, prefix="/api")
+app.include_router(support.router, prefix="/api")
+
 
 
 # Removed hardcoded packages - packages should be managed through admin interface

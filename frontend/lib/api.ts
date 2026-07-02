@@ -200,6 +200,18 @@ export const apiClient = {
       return response.data
     },
   },
+
+  // Support
+  support: {
+    list: async (): Promise<any[]> => {
+      const response = await api.get('/api/support/contact')
+      return response.data
+    },
+    delete: async (id: number): Promise<any> => {
+      const response = await api.delete(`/api/support/contact/${id}`)
+      return response.data
+    },
+  },
 }
 
 export default apiClient

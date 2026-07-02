@@ -1,0 +1,146 @@
+Overview
+To start integrating with theTeller API, you need a theTeller merchant account. See how to setup here: Setting up on theTeller.
+
+TheTeller API helps you create any type of payments flow from payment acceptance, e-commerce, recurring billing and a whole lots more.
+
+
+On your website
+
+Accept payments on your website with our JS libraries and checkout forms
+
+View Plugins
+
+E-commerce Websites
+
+Integrate our e-commerce plugins in your online stores
+
+View Plugins
+
+Mobile Apps
+
+Integrate our IOS and Android SDKs in your mobile apps
+
+View SDK
+Live Endpoint: https://prod.theteller.net
+Test Endpoint: https://test.theteller.net
+Setting up an Account on Theteller
+Setting up a merchant account is as easy as possible, simply sign up Signup Here . When you complete the signup form a verification mail will be sent to you to verify your email. Upon successful verification, our support team will contact you via email or phone call.
+
+Test Credentials
+Test API credentials will be created for your account to facilitate the integration phase. you can find your API credentials on your merchant dashbaord when you sign in.
+
+Live Credentials
+To go live simply contact our support team. Contact Support
+
+Adding Theteller to your website
+How Our New Theteller Inline JS Modal looks
+The Theteller inline JS code method is the easiest way to start accepting payment on your web applications. It offers a secure and convenient flow for users. The best part is that payment is done on your page, thereby eliminating the need to redirect to another page.
+
+
+Before going forward we might have eCommerce and mobile app plugins that can help you get started immediately on a platform of your choice. Click on the Plugins option below to see plugins for Theteller.
+
+Theteller Standard Checkout
+This shows you how to accept payments fast with Theteller Standard Checkout Page
+
+Live Endpoint: https://checkout.theteller.net
+Test Endpoint: https://checkout-test.theteller.net
+Accept payment quickly and securely using the standard method by calling the /initiate endpoint. When you call the endpoint we return a response with a payment link, do a redirect to the link and a secure payment form would be loaded for your customer to enter their payment details. When the transaction is completed we would call your redirect_url and append the payment response as query parameters.
+
+Step 1: Collect payment details.
+Collect the following data and send as a json payload to the /initiate.
+
+Parameter	Required	Data Type	Description
+merchant_id	true	string	Your merchant ID provided when you create an account.
+transaction_id	true	string	Unique transaction reference provided by you and must be 12 digits.
+desc	true	string	Text to be displayed as a short transaction narration.
+amount	true	string	Amount to charge.
+redirect_url	true	string	URL to redirect to when transaction is completed.
+email	true	string	Email of the customer.
+API_Key	true	string	Your merchant API key provided when you create an account.
+apiuser	true	string	Your merchant API Username provided when you create an account.
+Step 2: Initialise the payment.
+After collecting payment details initialise the payment by calling our API with the payment details, see an example below.
+
+REQUEST
+PHP
+C#
+Java
+         
+
+LIVE EndPoint
+Method: POST
+Endpoint/BaseURL: https://checkout.theteller.net/initiate
+
+//Request Headers
+Content-Type: application/json
+Authorization: Basic base64_encode('your API username:your API Key')
+Cache-Control: no-cache
+
+//Request Body
+{
+  "merchant_id":"Your merchant ID",
+  "transaction_id":"000000000000",
+  "desc":"Payment Using Checkout Page",
+  "amount":"000000000100",
+  "redirect_url":"http://redirect_url/response",
+  "email":"customer_email"
+}
+ 
+
+     
+Sample Response
+
+{
+    "status": "success",
+    "code": 200,
+    "reason": "Token successfully generated",
+    "token": "eU1xSFN5Ky92MUt5dmpnT",
+    "checkout_url": "https://test.theteller.net/checkout/checkout/eU1xSFN5Ky92MUt5dmpnT"
+}
+If the request is successful, a token and a full checkout url is returned as response. you are to redirect the user to the checkout page using the url value in the checkout_url field.
+
+What happens when the user completes the transaction on the page?
+
+When the user enter's their payment details, Theteller would validate then charge the card or mobile money. Once the charge is completed we would:
+
+Call your redirect url and post the response to you via url encoded data, we also append your transaction ID as query params to the url.
+
+Send an email to you and your customer on the successful payment. If email to customers is turned off we wouldn't send emails.
+
+Sample Callback Response
+
+https://redirect_url?code=000&status=successful&reason=transaction20%successful&transaction_id=000000000000
+                                                            
+Checking payment response / verifying transaction.
+When a transaction is completed we append the transaction ID, status, code, reason to your redirect URL. you can check the status of the transaction using the transaction ID. In the example below we show a code snipet to check transaction status
+
+REQUEST
+PHP
+C#
+Java
+         
+
+ Method: GET
+Endpoint: /v1.1/users/transactions/Replace with transaction ID/status
+
+//Request Headers
+Content-Type: application/json
+Merchant-Id: Your Merchant ID
+Cache-Control: no-cache
+
+
+ 
+
+     
+Sample Response
+
+{
+    "code": "000",
+    "status": "approved",
+    "reason": "Transaction Successful",
+    "transaction_id": "000000000267",
+    "r_switch": "VIS",
+    "subscriber_number": "************1999",
+    "amount": 1
+}
+                                          

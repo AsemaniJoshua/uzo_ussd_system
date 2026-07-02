@@ -25,6 +25,29 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:8000' 
   : 'https://api2.netservicedata.site'
 
+const NETWORK_LOGOS = {
+  MTN: (className = "w-8 h-8 rounded-lg shadow-sm") => (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#FFCC00"/>
+      <ellipse cx="50" cy="50" rx="35" ry="22" stroke="black" strokeWidth="4" fill="none"/>
+      <text x="50" y="58" fontFamily="system-ui, sans-serif" fontWeight="900" fontSize="22" fill="black" textAnchor="middle" letterSpacing="0.5">MTN</text>
+    </svg>
+  ),
+  TELECEL: (className = "w-8 h-8 rounded-lg shadow-sm") => (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#E60000"/>
+      <text x="50" y="58" fontFamily="system-ui, sans-serif" fontWeight="800" fontSize="18" fill="white" textAnchor="middle">telecel</text>
+    </svg>
+  ),
+  AT: (className = "w-8 h-8 rounded-lg shadow-sm") => (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#005B94"/>
+      <circle cx="50" cy="50" r="32" stroke="white" strokeWidth="5.5" fill="none"/>
+      <text x="50" y="59" fontFamily="system-ui, sans-serif" fontWeight="bold" fontSize="28" fill="white" textAnchor="middle">at</text>
+    </svg>
+  )
+}
+
 export default function App() {
   // Navigation / Page state: 'home', 'buy', 'status', 'redirecting'
   const [currentPage, setCurrentPage] = useState('home')
@@ -48,6 +71,14 @@ export default function App() {
   const [txDetails, setTxDetails] = useState(null)
   const [pollingStatus, setPollingStatus] = useState('idle') // 'idle', 'polling', 'paid', 'failed', 'error'
   const [statusMessage, setStatusMessage] = useState('')
+
+  // Support Form State
+  const [supportName, setSupportName] = useState('')
+  const [supportEmail, setSupportEmail] = useState('')
+  const [supportMessage, setSupportMessage] = useState('')
+  const [supportSubmitting, setSupportSubmitting] = useState(false)
+  const [supportSuccess, setSupportSuccess] = useState(false)
+  const [supportError, setSupportError] = useState(null)
 
   // 1. Intercept URL redirects on mount
   useEffect(() => {
@@ -102,6 +133,29 @@ export default function App() {
       setTxDetails(res.data)
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault()
+    setSupportSubmitting(true)
+    setSupportSuccess(false)
+    setSupportError(null)
+    try {
+      await axios.post(`${API_BASE_URL}/support/contact`, {
+        name: supportName,
+        email: supportEmail,
+        message: supportMessage
+      })
+      setSupportSuccess(true)
+      setSupportName('')
+      setSupportEmail('')
+      setSupportMessage('')
+    } catch (err) {
+      console.error(err)
+      setSupportError('Failed to send message. Please try again later.')
+    } finally {
+      setSupportSubmitting(false)
     }
   }
 
@@ -276,7 +330,7 @@ export default function App() {
                 playsInline 
                 className="absolute inset-0 w-full h-full object-cover opacity-35"
               >
-                <source src="https://player.vimeo.com/external/373226032.hd.mp4?s=e76f44fa29d61448d208dcb17afe5b77e77ca9dd&profile_id=174" type="video/mp4" />
+                <source src="https://player.vimeo.com/external/409217036.sd.mp4?s=7b9da2977b31ad546b5a39cbfa2b415a77fae93f&profile_id=165" type="video/mp4" />
               </video>
               
               {/* Overlay Gradient */}
@@ -323,15 +377,15 @@ export default function App() {
                 <span className="font-bold text-slate-400 text-sm uppercase tracking-wider">Supported Networks:</span>
                 <div className="flex flex-wrap justify-center gap-6 md:gap-12">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-700 font-bold flex items-center justify-center text-xs">MTN</div>
+                    {NETWORK_LOGOS.MTN()}
                     <span className="font-semibold text-slate-700 text-sm">MTN Ghana</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-700 font-bold flex items-center justify-center text-xs">TC</div>
+                    {NETWORK_LOGOS.TELECEL()}
                     <span className="font-semibold text-slate-700 text-sm">Telecel Ghana</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-700 font-bold flex items-center justify-center text-xs">AT</div>
+                    {NETWORK_LOGOS.AT()}
                     <span className="font-semibold text-slate-700 text-sm">AT Money</span>
                   </div>
                 </div>
@@ -418,13 +472,15 @@ export default function App() {
                           key={net.id}
                           type="button"
                           onClick={() => setNetwork(net.id)}
-                          className={`network-select-btn flex flex-col items-center justify-center py-4 rounded-xl border text-sm font-bold cursor-pointer ${
+                          className={`network-select-btn flex flex-col items-center justify-center py-3 rounded-xl border text-sm font-bold cursor-pointer transition-all ${
                             isActive 
-                              ? `${net.activeBorder} ${net.activeBg}` 
+                              ? `${net.activeBorder} ${net.activeBg} shadow-sm scale-[1.02]` 
                               : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:border-slate-300'
                           }`}
                         >
-                          <Smartphone className="w-5 h-5 mb-1 text-slate-400" />
+                          <div className="mb-2">
+                            {NETWORK_LOGOS[net.id]("w-10 h-10 rounded-lg shadow-sm")}
+                          </div>
                           {net.name}
                         </button>
                       )
@@ -638,23 +694,68 @@ export default function App() {
               <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Help & Support</h2>
               <p className="text-sm text-slate-500 mb-6">Have questions or need assistance? Fill out the form below to get in touch with our team.</p>
               
-              <form onSubmit={(e) => { e.preventDefault(); alert("Thank you for contacting support. We will get back to you shortly."); e.target.reset(); }} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-2">Full Name</label>
-                  <input type="text" placeholder="John Doe" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" />
+              {supportSuccess ? (
+                <div className="p-8 bg-emerald-50/80 border border-emerald-150 rounded-xl text-center space-y-3">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+                  <h3 className="text-lg font-bold text-slate-900">Message Sent!</h3>
+                  <p className="text-sm text-slate-600">Thank you for contacting NetService support. Our team will review your inquiry and get back to you shortly.</p>
+                  <button 
+                    onClick={() => setSupportSuccess(false)}
+                    className="mt-2 text-sm text-blue-600 font-semibold hover:underline"
+                  >
+                    Send another message
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-2">Email Address</label>
-                  <input type="email" placeholder="john@example.com" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-2">Message</label>
-                  <textarea rows="4" placeholder="How can we help you today?" required className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 resize-none focus:outline-none"></textarea>
-                </div>
-                <button type="submit" className="btn-primary w-full py-3 rounded-lg text-sm font-bold cursor-pointer">
-                  Send Message
-                </button>
-              </form>
+              ) : (
+                <form onSubmit={handleSupportSubmit} className="space-y-4">
+                  {supportError && (
+                    <div className="p-3.5 bg-rose-50 border border-rose-250 rounded-lg text-xs text-rose-700 font-medium">
+                      {supportError}
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-2">Full Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="John Doe" 
+                      required 
+                      value={supportName}
+                      onChange={(e) => setSupportName(e.target.value)}
+                      className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-2">Email Address</label>
+                    <input 
+                      type="email" 
+                      placeholder="john@example.com" 
+                      required 
+                      value={supportEmail}
+                      onChange={(e) => setSupportEmail(e.target.value)}
+                      className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 focus:outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-2">Message</label>
+                    <textarea 
+                      rows="4" 
+                      placeholder="How can we help you today?" 
+                      required 
+                      value={supportMessage}
+                      onChange={(e) => setSupportMessage(e.target.value)}
+                      className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-full focus:border-blue-500 resize-none focus:outline-none"
+                    ></textarea>
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={supportSubmitting}
+                    className="btn-primary w-full py-3 rounded-lg text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {supportSubmitting ? 'Sending Message...' : 'Send Message'}
+                  </button>
+                </form>
+              )}
             </div>
 
             <div className="space-y-6">
