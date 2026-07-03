@@ -132,7 +132,12 @@ async def verify_payment(transaction_id: str):
     Check payment status by transaction ID.
     According to TheTeller docs: GET /v1.1/users/transactions/{transaction_id}/status
     """
-    url = f"{BASE}/v1.1/users/transactions/{_format_tx_id(transaction_id)}/status"
+    if "checkout-test.theteller.net" in BASE or "test" in BASE:
+        status_base = "https://test.theteller.net"
+    else:
+        status_base = "https://prod.theteller.net"
+        
+    url = f"{status_base}/v1.1/users/transactions/{_format_tx_id(transaction_id)}/status"
     headers = {
         "Authorization": _theteller_auth_header(),
         "Content-Type": "application/json",
