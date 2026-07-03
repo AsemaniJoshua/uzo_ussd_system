@@ -127,6 +127,40 @@ async def get_purchase_status(ref: str, db: AsyncSession = Depends(get_session))
     q = await db.execute(select(Transaction).where(or_(*conditions)))
     tx = q.scalars().first()
     if tx:
+        # FALLBACK: If status is PENDING, check the status in real-time with TheTeller API
+        if tx.status == "PENDING" and tx.payment_reference:
+            try:
+                from app.clients.theteller_client import verify_payment
+                resp = await verify_payment(tx.payment_reference)
+                print(f"Real-time TheTeller status check for {tx.payment_reference}: {resp}")
+                
+                # Check status/code
+                status_lower = resp.get("status", "").lower() if resp.get("status") else ""
+                code = resp.get("code")
+                reason_lower = resp.get("reason", "").lower() if resp.get("reason") else ""
+                
+                is_success = (
+                    code == "000" or 
+                    status_lower in ("success", "paid", "completed", "approved", "successful")
+                )
+                is_failed = (
+                    code in ("111", "112", "113", "114", "999") or
+                    status_lower in ("failed", "cancelled", "declined")
+                )
+                
+                if is_success:
+                    tx.status = "PAID"
+                    await db.commit()
+                    await db.refresh(tx)
+                    print(f"Transaction {tx.id} updated to PAID via real-time check")
+                elif is_failed:
+                    tx.status = "FAILED"
+                    await db.commit()
+                    await db.refresh(tx)
+                    print(f"Transaction {tx.id} updated to FAILED via real-time check")
+            except Exception as ex:
+                print(f"Error during real-time TheTeller status check: {ex}")
+                
         return {
             "status": tx.status,
             "id": tx.id,
