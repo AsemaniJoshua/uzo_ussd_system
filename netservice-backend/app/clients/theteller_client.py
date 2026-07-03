@@ -163,12 +163,17 @@ async def initiate_checkout_payment(amount_ghs: float, tx_id: str | int, desc: s
         "Cache-Control": "no-cache"
     }
     
+    # Ensure redirect_url is a valid public URL (TheTeller rejects localhost/loopback addresses)
+    sanitized_redirect = redirect_url
+    if "localhost" in sanitized_redirect or "127.0.0.1" in sanitized_redirect or "0.0.0.0" in sanitized_redirect:
+        sanitized_redirect = "https://netservicedata.site/"
+
     payload = {
         "merchant_id": settings.THETELLER_MERCHANT_ID,
         "transaction_id": _format_tx_id(tx_id),
         "desc": desc,
         "amount": _format_amount(amount_ghs),
-        "redirect_url": redirect_url,
+        "redirect_url": sanitized_redirect,
         "email": email
     }
     
