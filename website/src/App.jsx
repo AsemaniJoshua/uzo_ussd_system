@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import './App.css'
 
-const API_BASE_URL = 'https://api2.netservicedata.site'
+const API_BASE_URL = 'https://api2.netservicedata.site/api'
 
 const NETWORK_LOGOS = {
   MTN: (className = "w-8 h-8 rounded-lg shadow-sm") => (
