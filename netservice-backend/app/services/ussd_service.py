@@ -6,7 +6,7 @@ from app.repositories.package_repo import PackageRepository
 from app.schemas.package_schemas import NetworkEnum
 
 async def generate_main_menu():
-    return "Welcome to NetService NT: The Data is NOT INSTANT. It takes between 1min to 5mins to deliver\n\n1. Buy Data bundle\n2. Contact Support"
+    return "Welcome to solos service. It takes between 1min to 1 hour to 48 hours to deliver\n\n1. Buy Data bundle\n2. Contact Support"
 
 def contact_support_text():
     return "WhatsApp: 0505235329\nCall: 0505235329"
