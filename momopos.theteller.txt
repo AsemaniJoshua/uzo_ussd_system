@@ -1,0 +1,280 @@
+Test your payment integration
+Use your merchant test credentials to simulate payments, verify callbacks, and check results. No real money moves.
+
+
+Test mode
+Test mode
+REST API
+JSON
+GHS
+1
+Get test credentials
+2
+Send test payment
+3
+Confirm status
+Test mode base URL
+https://api.momopos.theteller.net/test
+Every route below is appended to this configured base before it is shown or copied.
+
+Test payments only
+
+Payments produce dummy ledger entries without contacting a telco or prompting a handset. Use the test scenarios to exercise success, failure, and pending.
+Check GET /payment-environment returns mode: test and simulated: true. Send X-Payment-Mode: test with every request; a live API rejects it with HTTP 409 before processing.
+
+The API URL fixes the payment mode. X-Payment-Mode is optional for existing integrations; when supplied, it must match the URL’s backend or the request returns HTTP 409. These examples include X-Payment-Mode: test. Credentials must always belong to the selected mode.
+
+Merchant
+Your Business
+
+TPAY-582
+
+Processing code
+000200
+
+Required on every payment
+
+Currency
+GHS
+
+Ghana Cedi, major units
+
+Surcharge
+Per your plan
+
+Reported per transaction on the status response
+
+Keep your secret private
+
+Never embed the client secret in browser code, mobile apps, public repositories, or logs. Mint tokens server-side only.
+Choose a test outcome
+Use your test credentials, terminal, and callback URL with the same payment and status endpoints.
+
+Staging simulates mobile-money payments locally. There is no telco request, handset prompt, or wallet debit. Authentication, validation, fees, transaction records, and merchant callbacks still run normally. All supported payment networks use these scenarios:
+
+Subscriber number	Outcome	Code
+233240000000 (default)	Approved	000
+233240000001 (suffix 0001)	Failed	100
+233240000002 (suffix 0002)	Pending	101
+Try it in Sales Mode
+Choose your test terminal, enter an amount, and select Approved, Failed, or Pending. Sales Mode runs the same simulator as the API, so you can test before writing code. It uses your dashboard session; API integrations use your test keys.
+
+Every other valid subscriber number succeeds. Choose a new transaction_id for each scenario; the normal duplicate checks still apply. Changing the number on a retry does not change a stored outcome.
+
+Pending stays pending
+
+The 0002 scenario remains 101 / Pending and never auto-approves. It sends no terminal callback. Use a new transaction with a success number to test completion.
+Async initiation returns the usual 200 queued response. Once processed, success and failure produce a signed merchant callback with a stable Idempotency-Key. Status and callback responses carry a Simulated transaction ... reason and SIM- customer reference. Stored outcomes survive restarts; unknown IDs do not return dummy success.
+
+MTN and Airtel name enquiries return SIMULATED CUSTOMER. Recurring consent and cancellation are simulated too; consent is approved immediately. Recurring debits use the same test numbers and return simulated: true with their result.
+
+Use staging accounts and destinations
+
+Dummy approvals appear in staging reports. Merchant callbacks, email, SMS, and Ghana Card verification still use their configured services. Keep test credentials, terminals, and callback URLs scoped to staging. Production payments use the live network; these phone suffixes select test outcomes only in simulation.
+Your test credentials
+Open Test API keys to create or retrieve your own test_ client ID and secret. They authenticate only with the test gateway; production rejects them. Use an active test terminal belonging to your merchant.
+
+Create your test credentials
+
+Merchants signed into the dashboard see their test client ID, secret and terminal inlined into every example below. Go to API keys.
+1. Authentication
+Every payment and status request authenticates with an access token minted from your client credentials.
+
+POST
+/gen-token
+Both GET and POST are accepted, and credentials may be sent as query parameters or form fields. Prefer POST with form fields so the secret never appears in URLs or access logs.
+
+Successful response
+
+json
+Copy
+{
+  "access_token": "<token>",
+  "token_type": "BearerToken",
+  "expires_in": "43200",
+  "payment_mode": "test",
+  "issued_at": "1787078722000",
+  "client_id": "test_<your-client-id>",
+  "organization_name": "Your Business",
+  "api_product_list": "[MOBILE-MONEY]",
+  "api_product_list_json": ["MOBILE-MONEY"],
+  "status": "approved"
+}
+Send the token on every payment and status request:
+
+http
+Copy
+Authorization: Bearer <access_token>
+X-Payment-Mode: test
+Token handling rules
+Read expires_in from the response (seconds). Do not hardcode a lifetime. Cache the token and reuse it until shortly before expiry; do not mint one per transaction.
+The token is not tied to your IP address. Generate it on one host and use it from another.
+The token is scoped to TPAY-582. Using it against another merchant's terminal fails with code 600.
+On an expired or invalid token the API answers with code 979. Mint a new token and retry.
+Code	Description	Action
+411	client_id and client_secret are required	Send both credentials.
+499	Client does not exist	Credentials are wrong — verify them.
+979	authorization not set / token has expired	Send a Bearer token; refresh if expired.
+2. Send a test payment
+POST
+/process/tpay-v2
+Required headers
+
+http
+Copy
+Content-Type: application/json
+Authorization: Bearer <access_token>
+Complete request body
+
+json
+Copy
+{
+  "amount": "10.00",
+  "processing_code": "000200",
+  "r_switch": "MTN",
+  "pos_terminal_id": "<your-pos-terminal-id>",
+  "voucher_code": "",
+  "transaction_id": "582202608180001",
+  "subscriber_number": "233240000000",
+  "desc": "Test payment for order 0001",
+  "currency": "GHS",
+  "callback": "https://merchant.example.com/tpay/callback",
+  "reference": "order-0001",
+  "timestamp": "2026-08-18T12:00:00Z"
+}
+Request field reference
+Field	Requirement	Accepted value and behaviour
+amount	Required	JSON string containing a positive, finite amount in major GHS units, for example 10.00.
+processing_code	Optional	Defaults to 000200. If sent, use exactly six digits; transfer codes 404000 and 404020 are rejected.
+r_switch	Required	Use MTN, VDF, ATG, GMY, or ZPY. Vodafone/Telecel, Airtel/Tigo, GMoney, and Zeepay aliases are normalized.
+pos_terminal_id	Required	An active terminal owned by the token merchant.
+voucher_code	Network-specific	For GMY use a dummy PIN, e.g. 1234. Leave empty for MTN, VDF, ATG, and ZPY. Never use a real wallet PIN for a test.
+transaction_id	Required	Unique per terminal and payment attempt; 12–255 characters.
+subscriber_number	Required	12 digits beginning with 233. Local 0XXXXXXXXX and +233XXXXXXXXX inputs are normalized.
+desc	Optional	Customer-facing narration, 10–100 characters. Defaults to POS transaction when omitted.
+currency	Optional	Defaults to GHS; no other currency is accepted.
+callback	Required	Absolute HTTPS URL with a host. Query parameters are allowed; URL fragments are rejected.
+reference	Required	Merchant reference, 5–30 characters, forwarded with the provider payment.
+timestamp	Optional	String metadata with no server-side format validation. RFC 3339 / ISO 8601 is recommended.
+Malformed JSON, field validation, and duplicate requests return code 411. An invalid amount returns 422; a token used with another merchant's terminal returns 600. Generate a fresh transaction_id for every payment attempt.
+
+Server-owned payment fields
+
+Merchant identity comes from the Bearer token and terminal. The API generates system_trace and requested_at, then calculates surcharge_amount and total_amount. Do not send or calculate those fields in the request.
+Surcharge
+Your terminal carries a customer surcharge set by your fee plan. The simulated total is amount + surcharge, and status responses and callbacks report original_amount, surcharge_amount and total_amount separately.
+
+Do not hardcode the fee
+
+surcharge_amount and total_amount on the status response and callback are always authoritative for a given transaction. Fee plans can change.
+Accepted (queued) response
+
+json
+Copy
+{
+  "code": "200",
+  "status": "successful",
+  "reason": "Request receive successfully",
+  "system_trace_id": "<generated-system-trace>",
+  "transaction_id": "582202608180001"
+}
+code=200 means queued, not paid
+
+The worker resolves the selected simulation scenario without a handset prompt. Store system_trace_id; the final state arrives on your callback URL and can be polled from the status endpoints.
+3. Callback
+When the transaction reaches a final state, the platform POSTs a JSON payload to the callback URL from your payment request.
+
+The request carries an X-Signature header: a hex-encoded HMAC-SHA256 of the raw request body. Request the shared verification secret from your integration contact and verify it before trusting the payload.
+Respond with HTTP 200 quickly (acknowledge first, process afterwards). Delivery is attempted up to 3 times with backoff; 5xx responses trigger a retry.
+Treat the callback as a notification, not the system of record. If your endpoint was unreachable, recover the final state from the status endpoints.
+4. Transaction status
+All three status endpoints require the same Authorization: Bearer header as payments, and only return transactions belonging to TPAY-582.
+
+4.1 By system trace
+GET
+/process/status/{system_trace_id}
+4.2 By transaction ID (with terminal header)
+GET
+/process/{transaction_id}/status
+bash
+Copy
+curl "https://api.momopos.theteller.net/test/process/582202608180001/status" \
+  -H "X-Payment-Mode: test" \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Pos-Terminal-Id: <your-pos-terminal-id>"
+4.3 By transaction ID (no terminal header)
+GET
+/process/check-status/{transaction_id}
+bash
+Copy
+curl "https://api.momopos.theteller.net/test/process/check-status/582202608180001" \
+  -H "X-Payment-Mode: test" \
+  -H "Authorization: Bearer <access_token>"
+Status response
+
+json
+Copy
+{
+  "code": "000",
+  "status": "Approved",
+  "reason": "Simulated transaction successful",
+  "system_trace_id": "<generated-system-trace>",
+  "transaction_id": "582202608180001",
+	  "merchant_id": "TPAY-582",
+	  "merchant_name": "Your Business",
+	  "terminal_id": "<your-pos-terminal-id>",
+	  "terminal_name": "Main terminal",
+	  "r-switch": "MTN",
+  "amount": 10.2,
+  "surcharge_amount": 0.2,
+  "original_amount": 10,
+  "elevy_amount": 0,
+  "taxable_amount": 0,
+  "total_amount": 10.2,
+  "processing_code": "000200",
+  "desc": "Test payment for order 0001",
+  "subscriber_number": "233240000000",
+  "customer_id": "SIM-<generated-system-trace>"
+}
+Polling cadence
+
+Poll no more often than every 10–15 seconds per transaction, and stop once you receive a terminal code (anything other than 101).
+5. Rate limits
+Requests above the allowed rate receive HTTP 429.
+
+with headers Retry-After (seconds), X-RateLimit-Limit and X-RateLimit-Remaining. Wait at least Retry-After seconds before retrying.
+
+Endpoint group	Default limit	Keyed by
+/gen-token	120 requests/min (burst 60)	source IP
+Payments and status checks	300 requests/min (burst 100)	merchant
+Limits may be tuned per deployment. Caching your access token keeps you well inside the token limit.
+
+7. Response code reference
+Payment results normally use HTTP 200; inspect the code in the JSON body. A payment environment mismatch returns HTTP 409, and rate limiting returns HTTP 429.
+
+Code	Meaning
+000	Transaction successful (terminal).
+101	Transaction pending — poll again later.
+200	Payment request accepted and queued (initiation only — not final).
+100	Transaction failed (see reason), or an internal error.
+411	Validation error, duplicate transaction, or unknown/inactive terminal.
+422	Invalid amount.
+499	Unknown client credentials (/gen-token).
+600	Token not authorized for this terminal.
+979	Missing, malformed, or expired Bearer token.
+401	Transaction not found.
+HTTP 409	Payment environment mismatch. Use test credentials with the test API, or live credentials with the live API. The request was not processed.
+429	Rate limit exceeded (real HTTP 429) — honour Retry-After.
+Test integration checklist
+Mint a token via /gen-token, cache it, and refresh before expires_in elapses (or on a 979 response).
+Send Authorization: Bearer <token> and X-Payment-Mode: test on every payment and status call.
+Generate a unique transaction_id (12–255 chars) per payment attempt and store the returned system_trace_id.
+Treat initiation code=200 as queued, not paid.
+Expose an HTTPS callback endpoint, verify X-Signature, respond 200 quickly, and reconcile against the status endpoints.
+Treat only 000 as success; keep 101 pending; everything else is a failure with the explanation in reason.
+Test success, failure, and persistent pending in staging, including callback verification, using your merchant test credentials and staging terminal.
+Honour Retry-After on HTTP 429.
+Keep the client secret and access tokens out of URLs, browser code, and logs.
+Ready for your first test?
+
+Get your test keys, then run a simulated payment.
