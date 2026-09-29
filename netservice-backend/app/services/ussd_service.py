@@ -73,14 +73,14 @@ def no_data_menu():
     return "No packages available"
 
 def recipient_choice_menu():
-    return "Enter recipient\n1. Buy For self\n2. Buy for others"
+    return "Select Account\n1. My Number\n2. Other Number"
 
 def enter_recipient_prompt():
-    return "Enter recipient number (start with 0 if you will type local format):"
+    return "Enter mobile number:"
 
 def confirm_menu(package_name: str, amount: str, recipient: str):
     clean_name = clean_package_name(package_name)
-    return f"Confirm\n{clean_name} at GHS {amount}\nRecipient: {recipient}\n\nWait and approve MoMo prompt on your phone.\n\n1. Confirm"
+    return f"Confirm\n{clean_name} at GHS {amount}\nNumber: {recipient}\n\nApprove prompt on your phone.\n\n1. Confirm"
 
 def final_payment_message():
-    return "Payment initiated! Approve the MoMo prompt. Order will be delivered within 1 to 5 mins. Dial *170# if payment prompt delays or fails to show."
+    return "Payment initiated! Approve prompt on your phone. Order will be delivered within 1 to 5 mins. Dial *170# if prompt delays or fails to show."

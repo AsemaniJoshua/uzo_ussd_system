@@ -165,7 +165,7 @@ async def ussd_simulator(
                     session['profit_amount'] = packages[pkg_idx][2]
                     session['stage'] = USSDState.ENTER_RECIPIENT
                     ussd_sessions[session_id] = session
-                    return "Enter recipient phone number (10 digits):"
+                    return "Enter mobile number:"
                 else:
                     return "Invalid package selection."
             except (ValueError, IndexError):
@@ -177,7 +177,8 @@ async def ussd_simulator(
                 session['recipient'] = last_input
                 session['stage'] = USSDState.CONFIRM
                 ussd_sessions[session_id] = session
-                return f"Confirm purchase:\nPackage: {session['package']}\nAmount: GHS {session['amount']}\nRecipient: {last_input}\n1. Confirm\n2. Cancel"
+                clean_name = clean_package_name(session['package'])
+                return f"Confirm purchase:\n{clean_name} at GHS {session['amount']}\nNumber: {last_input}\n1. Confirm\n2. Cancel"
             else:
                 return "Invalid phone number. Please enter 10 digits."
         
@@ -186,7 +187,7 @@ async def ussd_simulator(
                 # Simulator mode: just show success message without creating DB record
                 cleanup_session(session_id)
                 clean_name = clean_package_name(session['package'])
-                return f"Transaction successful!\n{clean_name} at GHS {session['amount']}\nRecipient: {session['recipient']}\n\nThis is a simulation - no actual transaction was created."
+                return f"Transaction successful!\n{clean_name} at GHS {session['amount']}\nNumber: {session['recipient']}\n\nThis is a simulation - no actual transaction was created."
             elif last_input == "2":
                 cleanup_session(session_id)
                 return "Transaction cancelled."
