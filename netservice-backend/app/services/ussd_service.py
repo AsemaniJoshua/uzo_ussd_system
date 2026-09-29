@@ -12,12 +12,13 @@ def contact_support_text():
     return "WhatsApp: 0505235329\nCall: 0505235329"
 
 def select_network_menu():
-    return "Select Network\n1. MTN\n2. AT\n3. Telecel"
+    return "Select Network\n1. MNT\n2. AT\n3. Telecel"
 
 async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     """Display packages for any network with pagination"""
     network_str = network.value if hasattr(network, 'value') else str(network)
-    text = f"{network_str} P{page}\n"
+    display_network = "MNT" if network_str == "MTN" else network_str
+    text = f"{display_network} P{page}\n"
     
     close_db = False
     if db is None:
