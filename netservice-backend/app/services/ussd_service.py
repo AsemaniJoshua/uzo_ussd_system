@@ -1,9 +1,19 @@
 # app/services/ussd_service.py
+import re
 from fastapi import Form
 from typing import Tuple, Optional
 import asyncio
 from app.repositories.package_repo import PackageRepository
 from app.schemas.package_schemas import NetworkEnum
+
+def clean_package_name(name: str) -> str:
+    """Removes 'GB', 'MB', 'Data', etc., to prevent telco tracking."""
+    if not name:
+        return ""
+    cleaned = re.sub(r'(?i)\b(?:data|bundle)\b', '', str(name)).strip()
+    cleaned = re.sub(r'(?i)(?<=\d)\s*(?:gb|mb)\b', '', cleaned).strip()
+    cleaned = re.sub(r'(?i)\b(?:gb|mb)\b', '', cleaned).strip()
+    return cleaned if cleaned else str(name)
 
 async def generate_main_menu():
     return "Welcome to solos\n\n1. Buy bundle\n2. Contact Support"
@@ -43,7 +53,8 @@ async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     
     # Display packages for current page
     for idx, pkg in enumerate(page_packages, start=start_idx + 1):
-        text += f"{idx}.{pkg.package_name}-{pkg.amount}GHS\n"
+        clean_name = clean_package_name(pkg.package_name)
+        text += f"{idx}. {clean_name} at {pkg.amount}GHS\n"
     
     # Add navigation options
     nav = ""
@@ -68,7 +79,8 @@ def enter_recipient_prompt():
     return "Enter recipient number (start with 0 if you will type local format):"
 
 def confirm_menu(package_name: str, amount: str, recipient: str):
-    return f"Confirm\nBundle: {package_name}\nAmount: GHS {amount}\nRecipient: {recipient}\n\nWait and approve MoMo prompt on your phone.\n\n1. Confirm"
+    clean_name = clean_package_name(package_name)
+    return f"Confirm\n{clean_name} at GHS {amount}\nRecipient: {recipient}\n\nWait and approve MoMo prompt on your phone.\n\n1. Confirm"
 
 def final_payment_message():
-    return "Payment initiated! Approve the MoMo prompt. Bundle will be delivered within 1mins to 5mins.Dial *170# if payment prompt delays or fails to show."
+    return "Payment initiated! Approve the MoMo prompt. Order will be delivered within 1 to 5 mins. Dial *170# if payment prompt delays or fails to show."

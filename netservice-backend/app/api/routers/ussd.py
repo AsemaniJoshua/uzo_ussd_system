@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.services.ussd_service import (
     generate_main_menu, contact_support_text, select_network_menu,
     get_packages_menu, no_data_menu, recipient_choice_menu, enter_recipient_prompt,
-    confirm_menu, final_payment_message
+    confirm_menu, final_payment_message, clean_package_name
 )
 from app.db.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -185,7 +185,8 @@ async def ussd_simulator(
             if last_input == "1":
                 # Simulator mode: just show success message without creating DB record
                 cleanup_session(session_id)
-                return f"Transaction successful!\nPackage: {session['package']}\nAmount: GHS {session['amount']}\nRecipient: {session['recipient']}\n\nThis is a simulation - no actual transaction was created."
+                clean_name = clean_package_name(session['package'])
+                return f"Transaction successful!\n{clean_name} at GHS {session['amount']}\nRecipient: {session['recipient']}\n\nThis is a simulation - no actual transaction was created."
             elif last_input == "2":
                 cleanup_session(session_id)
                 return "Transaction cancelled."
