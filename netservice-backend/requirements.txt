@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
-SQLAlchemy
+SQLAlchemy[asyncio]
+greenlet
 aiomysql
 alembic
 python-jose
@@ -8,14 +9,11 @@ passlib[bcrypt]
 httpx
 pydantic
 python-dotenv
-databases          # optional helper if you want it; not required
+databases
 pydantic-settings
 pymysql
-uvicorn
 cryptography
-pydantic-settings
 python-multipart
-passlib[bcrypt]
 bcrypt
 pandas
 openpyxl
