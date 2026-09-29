@@ -6,7 +6,7 @@ from app.repositories.package_repo import PackageRepository
 from app.schemas.package_schemas import NetworkEnum
 
 async def generate_main_menu():
-    return "Welcome to solos service. It's instant delivery\n\n1. Buy Data bundle\n2. Contact Support"
+    return "Welcome to solos service. It's instant delivery\n\n1. Buy bundle\n2. Contact Support"
 
 def contact_support_text():
     return "WhatsApp: 0505235329\nCall: 0505235329"
@@ -17,7 +17,7 @@ def select_network_menu():
 async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     """Display packages for any network with pagination"""
     network_str = network.value if hasattr(network, 'value') else str(network)
-    text = f"{network_str} Data P{page}\n"
+    text = f"{network_str} P{page}\n"
     
     close_db = False
     if db is None:
@@ -58,7 +58,7 @@ async def get_packages_menu(network: NetworkEnum, db=None, page=1, page_size=5):
     return text.strip()
 
 def no_data_menu():
-    return "No data available"
+    return "No packages available"
 
 def recipient_choice_menu():
     return "Enter recipient\n1. Buy For self\n2. Buy for others"

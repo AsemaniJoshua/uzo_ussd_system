@@ -90,7 +90,7 @@ async def purchase_package(data: PurchaseRequest, db: AsyncSession = Depends(get
         resp = await initiate_checkout_payment(
             amount_ghs=float(pkg.amount),
             tx_id=theteller_tx_id,
-            desc=f"Data Bundle: {pkg.package_name}",
+            desc=f"Bundle: {pkg.package_name}",
             redirect_url=data.redirect_url,
             email=data.email
         )

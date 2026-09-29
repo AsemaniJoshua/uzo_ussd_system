@@ -24,7 +24,7 @@ class PaymentService:
         # Generate a unique 12-digit transaction ID to avoid TheTeller duplicates
         # We use random.randint to ensure it stays strictly numeric (12 digits)
         tx_id = str(random.randint(100000000000, 999999999999))
-        desc = f"Data Bundle: {tx.package_name}"
+        desc = f"Bundle: {tx.package_name}"
         
         # Get network string for TheTeller
         network = tx.network.value if hasattr(tx.network, 'value') else str(tx.network)
