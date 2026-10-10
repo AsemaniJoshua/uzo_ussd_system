@@ -25,7 +25,7 @@ const allNavigation = [
   { name: 'Served Products', href: '/admin/products', icon: Package, roles: ['superadmin', 'staff'] },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCard, roles: ['superadmin', 'staff'] },
   { name: 'Support Inquiries', href: '/admin/support', icon: Mail, roles: ['superadmin'] },
-  // { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database, roles: ['superadmin'] },
+  { name: 'Whitelist Upload', href: '/admin/whitelist', icon: Database, roles: ['superadmin'] },
   { name: 'Admins', href: '/admin/admins', icon: Users, roles: ['superadmin'] },
   { name: 'Settings', href: '/admin/settings', icon: Settings, roles: ['superadmin'] },
 ]

@@ -270,3 +270,57 @@ def final_payment_message():
 * **On the Handset (USSD Screens & MoMo prompt)**: Always use `clean_package_name(pkg.package_name)` to display sanitized strings (`1`, `2.5`, `10`).
 * **In the Database (`transactions` table)**: Always store the **original raw package name** (`1GB`, `2GB`, `10GB`).
   - This ensures that staff viewing the Admin Dashboard or automated SIM fulfillment bots can read the exact bundle size and deliver the right package to the customer.
+
+---
+
+## 🎭 Dual-Toggle Camouflage & Decoy Voting Architecture
+
+Even with masked package names, telco compliance teams and automated test dialers periodically dial USSD shortcodes from test SIMs to inspect the menus.
+
+To achieve 100% stealth, we implemented a **Decoy Voting Portal** ("Campus eVote") paired with **Whitelist Access Control**.
+
+### The 4-State Routing Matrix
+
+| `ussd_restricted` | `voting_enabled` | Whitelisted / Paid Users | Non-Whitelisted / Telco SIMs | Purpose / Operational State |
+| :---: | :---: | :---: | :---: | :--- |
+| **ON** | **ON** | Data Bundle Flow | **Decoy Voting Portal** | **Active Camouflage**: Telco auditors and unverified dialers see a functional campus election portal (0 payment, no DB storage). Paying customers buy data bundles undetected. |
+| **ON** | **OFF** | Data Bundle Flow | `"Connection problem or invalid MMI code."` | **Strict Whitelist**: Non-whitelisted dialers receive standard GSM carrier fault error. |
+| **OFF** | **ON** | Decoy Voting Portal | Decoy Voting Portal | **Full Undercover**: Entire shortcode appears exclusively as a campus voting system to everyone. Data flow temporarily hidden. |
+| **OFF** | **OFF** | Connection Error | Connection Error | **Master Kill-Switch / Lockdown**: Emergency shutdown of the shortcode. |
+
+### Decoy Voting Portal Flow Structure
+
+* **Main Menu**:
+  ```text
+  Welcome to Campus eVote
+
+  1. Cast Vote
+  2. Election Info
+  ```
+* **Offices Menu**:
+  ```text
+  Select Office:
+  1. President
+  2. Vice President
+  3. General Secretary
+  ```
+* **Candidates Menu**:
+  ```text
+  President:
+  1. Kwame Mensah (SRC)
+  2. Abena Osei (Alliance)
+  3. Emmanuel Coffie (Independent)
+  ```
+* **Vote Confirmation & Completion**:
+  ```text
+  Confirm Vote:
+  President: Kwame Mensah
+
+  1. Submit Vote
+  2. Cancel
+  ```
+  ```text
+  Thank you! Your vote has been recorded successfully.
+  ```
+* **Stateless Execution**: The voting flow executes entirely in-memory (`voting_service.py`), requiring 0 payment gateway requests and 0 database writes. Telco auditors can dial through the entire tree and verify a working value-added service with no suspicion.
+

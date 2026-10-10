@@ -129,10 +129,25 @@ class TransactionRepository:
 
     async def has_paid_transaction(self, msisdn: str) -> bool:
         """Check if user has ANY paid transaction (in transactions or served_requests table)"""
+        raw = str(msisdn).strip()
+        digits = ''.join(filter(str.isdigit, raw))
+        variants = {raw, digits}
+        if digits.startswith('233') and len(digits) == 12:
+            variants.add('0' + digits[3:])
+            variants.add('+' + digits)
+        elif digits.startswith('0') and len(digits) == 10:
+            variants.add('233' + digits[1:])
+            variants.add('+233' + digits[1:])
+        elif len(digits) == 9:
+            variants.add('0' + digits)
+            variants.add('233' + digits)
+            variants.add('+233' + digits)
+        variants_list = list(variants)
+
         # Check in transactions table
         q1 = await self.db.execute(
             select(Transaction)
-            .where(Transaction.user_msisdn == msisdn)
+            .where(Transaction.user_msisdn.in_(variants_list))
             .where(Transaction.status == "PAID")
             .limit(1)
         )
@@ -142,7 +157,7 @@ class TransactionRepository:
         # Check in served_requests table
         q2 = await self.db.execute(
             select(ServedRequest)
-            .where(ServedRequest.user_msisdn == msisdn)
+            .where(ServedRequest.user_msisdn.in_(variants_list))
             .where(ServedRequest.status == "PAID")
             .limit(1)
         )

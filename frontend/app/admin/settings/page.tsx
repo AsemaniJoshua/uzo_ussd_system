@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import AdminLayout from '@/components/AdminLayout'
-import { User, Save, Lock, Eye, EyeOff, Shield } from 'lucide-react'
+import { User, Save, Lock, Eye, EyeOff, Shield, Vote } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api'
 import toast from 'react-hot-toast'
@@ -18,6 +18,8 @@ export default function SettingsPage() {
   })
   const [ussdRestricted, setUssdRestricted] = useState(false)
   const [isTogglingUssd, setIsTogglingUssd] = useState(false)
+  const [votingEnabled, setVotingEnabled] = useState(false)
+  const [isTogglingVoting, setIsTogglingVoting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -31,6 +33,7 @@ export default function SettingsPage() {
     try {
       const settings = await apiClient.settings.get()
       setUssdRestricted(settings.ussd_restricted)
+      setVotingEnabled(settings.voting_enabled)
     } catch (error) {
       console.error('Failed to fetch settings:', error)
     }
@@ -48,6 +51,21 @@ export default function SettingsPage() {
       toast.error('Failed to update USSD restriction')
     } finally {
       setIsTogglingUssd(false)
+    }
+  }
+
+  const handleVotingToggle = async () => {
+    try {
+      setIsTogglingVoting(true)
+      const newValue = !votingEnabled
+      await apiClient.settings.updateVoting(newValue)
+      setVotingEnabled(newValue)
+      toast.success(`Decoy voting portal ${newValue ? 'enabled' : 'disabled'}`)
+    } catch (error) {
+      console.error('Failed to update voting decoy setting:', error)
+      toast.error('Failed to update voting decoy setting')
+    } finally {
+      setIsTogglingVoting(false)
     }
   }
 
@@ -150,25 +168,26 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* USSD Access Control - Commented out as requested
+              {/* USSD Security & Camouflage */}
               <div className="border-t pt-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <Shield className="w-5 h-5 mr-2 text-blue-600" />
-                  USSD Access Control
+                  USSD Security & Camouflage
                 </h2>
-                <div className="space-y-4 pl-7">
-                  <div className="flex items-center justify-between py-3">
-                    <div>
+                <div className="space-y-5 pl-7">
+                  {/* Toggle 1: Whitelist Restriction */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="pr-4">
                       <h3 className="text-sm font-medium text-gray-900">Restrict USSD Access</h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        When enabled, only users with previous paid transactions can access the USSD service
+                        When enabled, validates dialers against whitelisted contacts and customer purchase history.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={handleUssdRestrictionToggle}
                       disabled={isTogglingUssd}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                         ussdRestricted ? 'bg-blue-600' : 'bg-gray-200'
                       } ${isTogglingUssd ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
@@ -179,15 +198,70 @@ export default function SettingsPage() {
                       />
                     </button>
                   </div>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> When restricted, new users without payment history will see: 
-                      "Service temporarily restricted. Please try again later."
+
+                  {/* Toggle 2: Decoy Voting Portal */}
+                  <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                    <div className="pr-4">
+                      <div className="flex items-center gap-2">
+                        <Vote className="w-4 h-4 text-purple-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Decoy Voting Portal (Camouflage)</h3>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Serves an interactive campus election simulation ("Campus eVote") to conceal data vending from telco audits and unverified dialers.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleVotingToggle}
+                      disabled={isTogglingVoting}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                        votingEnabled ? 'bg-purple-600' : 'bg-gray-200'
+                      } ${isTogglingVoting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          votingEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Operational Status Banner */}
+                  <div className={`rounded-md p-4 border text-sm ${
+                    ussdRestricted && votingEnabled
+                      ? 'bg-purple-50 border-purple-200 text-purple-900'
+                      : ussdRestricted && !votingEnabled
+                      ? 'bg-blue-50 border-blue-200 text-blue-900'
+                      : !ussdRestricted && votingEnabled
+                      ? 'bg-amber-50 border-amber-200 text-amber-900'
+                      : 'bg-red-50 border-red-200 text-red-900'
+                  }`}>
+                    <div className="font-semibold mb-1 flex items-center gap-1.5">
+                      <span>Operational Routing Mode:</span>
+                      <span className="underline decoration-dotted">
+                        {ussdRestricted && votingEnabled && 'Active Camouflage'}
+                        {ussdRestricted && !votingEnabled && 'Strict Whitelist'}
+                        {!ussdRestricted && votingEnabled && 'Full Undercover'}
+                        {!ussdRestricted && !votingEnabled && 'Master Lockdown'}
+                      </span>
+                    </div>
+                    <p className="text-xs leading-relaxed opacity-90">
+                      {ussdRestricted && votingEnabled && (
+                        'Whitelisted numbers receive data package menus. Unwhitelisted dialers see the interactive Decoy Voting Portal (0 payment, no DB storage).'
+                      )}
+                      {ussdRestricted && !votingEnabled && (
+                        'Whitelisted numbers receive data package menus. Unwhitelisted dialers receive "Connection problem or invalid MMI code."'
+                      )}
+                      {!ussdRestricted && votingEnabled && (
+                        'All dialers receive the interactive Decoy Voting Portal regardless of whitelist status. (Data bundle service temporarily hidden).'
+                      )}
+                      {!ussdRestricted && !votingEnabled && (
+                        'Master kill-switch active. All dialers receive "Connection problem or invalid MMI code."'
+                      )}
                     </p>
                   </div>
                 </div>
               </div>
-              */}
 
               {/* Change Password */}
               <div className="border-t pt-6">

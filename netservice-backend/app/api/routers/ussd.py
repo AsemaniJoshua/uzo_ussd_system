@@ -10,6 +10,13 @@ from app.services.ussd_service import (
     get_packages_menu, no_data_menu, recipient_choice_menu, enter_recipient_prompt,
     confirm_menu, final_payment_message, clean_package_name
 )
+from app.services.voting_service import (
+    generate_voting_main_menu, generate_voting_offices_menu,
+    get_office_by_index, generate_candidates_menu,
+    get_candidate_by_index, confirm_vote_menu,
+    vote_success_message, vote_cancelled_message,
+    voting_info_message
+)
 from app.db.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.request_schemas import CreateTransactionIn
@@ -55,6 +62,11 @@ class USSDState:
     ENTER_RECIPIENT = "ENTER_RECIPIENT"
     CONFIRM = "CONFIRM"
     PROCESSING = "PROCESSING"
+    # Voting Decoy States
+    VOTING_HOME = "VOTING_HOME"
+    VOTING_OFFICE = "VOTING_OFFICE"
+    VOTING_CANDIDATE = "VOTING_CANDIDATE"
+    VOTING_CONFIRM = "VOTING_CONFIRM"
 
 # In-memory session storage (use Redis/Database in production)
 ussd_sessions = {}
@@ -69,12 +81,15 @@ def get_or_create_session(session_id: str, is_new: bool = False):
     if is_new or session_id not in ussd_sessions:
         ussd_sessions[session_id] = {
             'stage': USSDState.HOME,
+            'flow_type': 'DATA',
             'network': None,
             'package_idx': None,
             'package_name': None,
             'package_amount': None,
             'recipient': None,
             'current_page': 1,
+            'voting_office': None,
+            'voting_candidate': None,
         }
     return ussd_sessions[session_id]
 router = APIRouter()
@@ -108,20 +123,104 @@ async def ussd_simulator(
         if not network_enum:
             return "Network not supported."
 
+        # Check restriction & voting settings
+        from app.usecases.settings_usecases import SettingsUseCases
+        settings_uc = SettingsUseCases(db)
+        is_restricted = await settings_uc.is_ussd_restricted()
+        is_voting = await settings_uc.is_voting_enabled()
+        tx_uc = TransactionUseCases(db)
+        is_whitelisted = await tx_uc.user_has_paid_before(msisdn)
+
+        if is_restricted and is_voting:
+            flow_type = 'DATA' if is_whitelisted else 'VOTING'
+        elif is_restricted and not is_voting:
+            if not is_whitelisted:
+                return "Connection problem or invalid MMI code."
+            flow_type = 'DATA'
+        elif not is_restricted and is_voting:
+            flow_type = 'VOTING'
+        else:
+            return "Connection problem or invalid MMI code."
+
         # Initialize or get session state
         session = get_or_create_session(session_id, is_new_session)
         
-        # If it's a new session, show main menu
+        # If it's a new session, show appropriate main menu
         if is_new_session:
-            menu_text = await generate_main_menu()
-            return f"{menu_text}"
+            session['flow_type'] = flow_type
+            if flow_type == 'VOTING':
+                session['stage'] = USSDState.VOTING_HOME
+                ussd_sessions[session_id] = session
+                return generate_voting_main_menu()
+            else:
+                session['stage'] = USSDState.HOME
+                ussd_sessions[session_id] = session
+                menu_text = await generate_main_menu()
+                return f"{menu_text}"
         
-        # For Uzo, we use the input directly if it's not the initial dial
-        last_input = user_input
+        # For simulator, extract last input if concatenated with '*'
+        last_input = user_input.split('*')[-1] if '*' in user_input else user_input
         
         current_stage = session['stage']
-        
-        # State Machine Logic
+        current_flow = session.get('flow_type', flow_type)
+
+        # Voting Decoy Flow for Simulator
+        if current_flow == 'VOTING':
+            if current_stage == USSDState.VOTING_HOME:
+                if last_input == "1":
+                    session['stage'] = USSDState.VOTING_OFFICE
+                    ussd_sessions[session_id] = session
+                    return generate_voting_offices_menu()
+                elif last_input == "2":
+                    cleanup_session(session_id)
+                    return voting_info_message()
+                else:
+                    return "Invalid option. Select 1 or 2."
+
+            elif current_stage == USSDState.VOTING_OFFICE:
+                try:
+                    office_idx = int(last_input) - 1
+                    office = get_office_by_index(office_idx)
+                    if office:
+                        session['voting_office'] = office
+                        session['stage'] = USSDState.VOTING_CANDIDATE
+                        ussd_sessions[session_id] = session
+                        return generate_candidates_menu(office)
+                    else:
+                        return f"Invalid option.\n\n{generate_voting_offices_menu()}"
+                except ValueError:
+                    return f"Invalid input.\n\n{generate_voting_offices_menu()}"
+
+            elif current_stage == USSDState.VOTING_CANDIDATE:
+                office = session.get('voting_office')
+                if not office:
+                    cleanup_session(session_id)
+                    return "Session expired. Please dial again."
+                try:
+                    cand_idx = int(last_input) - 1
+                    candidate = get_candidate_by_index(office, cand_idx)
+                    if candidate:
+                        session['voting_candidate'] = candidate
+                        session['stage'] = USSDState.VOTING_CONFIRM
+                        ussd_sessions[session_id] = session
+                        return confirm_vote_menu(office['title'], candidate['name'])
+                    else:
+                        return f"Invalid candidate.\n\n{generate_candidates_menu(office)}"
+                except ValueError:
+                    return f"Invalid input.\n\n{generate_candidates_menu(office)}"
+
+            elif current_stage == USSDState.VOTING_CONFIRM:
+                cleanup_session(session_id)
+                if last_input == "1":
+                    return vote_success_message()
+                else:
+                    return vote_cancelled_message()
+
+            else:
+                cleanup_session(session_id)
+                return "Session expired. Please dial again."
+
+        # State Machine Logic - Data Bundle Flow
         if current_stage == USSDState.HOME:
             if last_input == "1":
                 session['stage'] = USSDState.NETWORK_SELECT
@@ -388,39 +487,128 @@ async def ussd_callback(
             logger.warning(f"Unknown network code: {network_code}")
             return UzoUSSDResponse(message="Network not supported.", ussdServiceOp=17).model_dump()
 
-        # Check USSD restriction before processing - Commented out as requested
-        """
+        # Check USSD restriction & voting decoy settings
         from app.usecases.settings_usecases import SettingsUseCases
         from app.db.session import AsyncSessionLocal
         async with AsyncSessionLocal() as db:
             settings_uc = SettingsUseCases(db)
             is_restricted = await settings_uc.is_ussd_restricted()
+            is_voting = await settings_uc.is_voting_enabled()
             
-            if is_restricted:
-                # Check if user has paid transaction before
-                tx_uc = TransactionUseCases(db)
-                has_paid = await tx_uc.user_has_paid_before(msisdn)
-                
-                if not has_paid:
-                    logger.info(f"USSD restricted - User {msisdn} has no paid transactions. Access blocked.")
-                    return UzoUSSDResponse(
-                        message="UNKNOWN APPLICATION.",
-                        ussdServiceOp=17
-                    ).model_dump()
-                else:
-                    logger.info(f"USSD restricted - User {msisdn} has paid before. Access allowed.")
-        """
+            tx_uc = TransactionUseCases(db)
+            is_whitelisted = await tx_uc.user_has_paid_before(msisdn)
+
+        # 4-State Matrix Decision:
+        # State 1 (Restricted=ON, Voting=ON):
+        #   Whitelisted -> DATA flow
+        #   Non-whitelisted -> VOTING decoy
+        # State 2 (Restricted=ON, Voting=OFF):
+        #   Whitelisted -> DATA flow
+        #   Non-whitelisted -> Connection Error (Blocked)
+        # State 3 (Restricted=OFF, Voting=ON):
+        #   Everyone -> VOTING decoy
+        # State 4 (Restricted=OFF, Voting=OFF):
+        #   Everyone -> Connection Error (Master Kill-Switch)
+
+        if is_restricted and is_voting:
+            flow_type = 'DATA' if is_whitelisted else 'VOTING'
+        elif is_restricted and not is_voting:
+            if not is_whitelisted:
+                logger.info(f"USSD restricted (Voting OFF) - User {msisdn} is not whitelisted. Access blocked.")
+                return UzoUSSDResponse(
+                    message="Connection problem or invalid MMI code.",
+                    ussdServiceOp=17
+                ).model_dump()
+            flow_type = 'DATA'
+        elif not is_restricted and is_voting:
+            flow_type = 'VOTING'
+        else:
+            # Restricted=OFF, Voting=OFF (Master Kill-Switch)
+            logger.info(f"USSD Kill-Switch active (Restricted=OFF, Voting=OFF) - User {msisdn} blocked.")
+            return UzoUSSDResponse(
+                message="Connection problem or invalid MMI code.",
+                ussdServiceOp=17
+            ).model_dump()
 
         # Initialize or get session state
         session = get_or_create_session(session_id, is_new_session)
         
-        # If it's a new session, show main menu
+        # If it's a new session, show appropriate main menu
         if is_new_session:
-            menu_text = await generate_main_menu()
-            return UzoUSSDResponse(message=menu_text, ussdServiceOp=2).model_dump()
+            session['flow_type'] = flow_type
+            if flow_type == 'VOTING':
+                session['stage'] = USSDState.VOTING_HOME
+                ussd_sessions[session_id] = session
+                logger.info(f"Decoy Voting session started for {msisdn} (session={session_id})")
+                return UzoUSSDResponse(message=generate_voting_main_menu(), ussdServiceOp=2).model_dump()
+            else:
+                session['stage'] = USSDState.HOME
+                ussd_sessions[session_id] = session
+                menu_text = await generate_main_menu()
+                return UzoUSSDResponse(message=menu_text, ussdServiceOp=2).model_dump()
+
         current_stage = session['stage']
-        
-        # State Machine Logic
+        current_flow = session.get('flow_type', flow_type)
+
+        # State Machine Logic - Voting Decoy Flow
+        if current_flow == 'VOTING':
+            if current_stage == USSDState.VOTING_HOME:
+                if user_input == "1":  # Cast Vote
+                    session['stage'] = USSDState.VOTING_OFFICE
+                    ussd_sessions[session_id] = session
+                    return UzoUSSDResponse(message=generate_voting_offices_menu(), ussdServiceOp=2).model_dump()
+                elif user_input == "2":  # Election Info
+                    cleanup_session(session_id)
+                    return UzoUSSDResponse(message=voting_info_message(), ussdServiceOp=17).model_dump()
+                else:
+                    return UzoUSSDResponse(message="Invalid option. Select 1 or 2.", ussdServiceOp=2).model_dump()
+
+            elif current_stage == USSDState.VOTING_OFFICE:
+                try:
+                    office_idx = int(user_input) - 1
+                    office = get_office_by_index(office_idx)
+                    if office:
+                        session['voting_office'] = office
+                        session['stage'] = USSDState.VOTING_CANDIDATE
+                        ussd_sessions[session_id] = session
+                        return UzoUSSDResponse(message=generate_candidates_menu(office), ussdServiceOp=2).model_dump()
+                    else:
+                        return UzoUSSDResponse(message=f"Invalid option.\n\n{generate_voting_offices_menu()}", ussdServiceOp=2).model_dump()
+                except ValueError:
+                    return UzoUSSDResponse(message=f"Invalid input.\n\n{generate_voting_offices_menu()}", ussdServiceOp=2).model_dump()
+
+            elif current_stage == USSDState.VOTING_CANDIDATE:
+                office = session.get('voting_office')
+                if not office:
+                    cleanup_session(session_id)
+                    return UzoUSSDResponse(message="Session expired. Please dial again.", ussdServiceOp=17).model_dump()
+                try:
+                    cand_idx = int(user_input) - 1
+                    candidate = get_candidate_by_index(office, cand_idx)
+                    if candidate:
+                        session['voting_candidate'] = candidate
+                        session['stage'] = USSDState.VOTING_CONFIRM
+                        ussd_sessions[session_id] = session
+                        confirm_text = confirm_vote_menu(office['title'], candidate['name'])
+                        return UzoUSSDResponse(message=confirm_text, ussdServiceOp=2).model_dump()
+                    else:
+                        return UzoUSSDResponse(message=f"Invalid candidate.\n\n{generate_candidates_menu(office)}", ussdServiceOp=2).model_dump()
+                except ValueError:
+                    return UzoUSSDResponse(message=f"Invalid input.\n\n{generate_candidates_menu(office)}", ussdServiceOp=2).model_dump()
+
+            elif current_stage == USSDState.VOTING_CONFIRM:
+                cleanup_session(session_id)
+                if user_input == "1":  # Submit Vote
+                    logger.info(f"Decoy vote cast by {msisdn} for {session.get('voting_candidate', {}).get('name')}")
+                    return UzoUSSDResponse(message=vote_success_message(), ussdServiceOp=17).model_dump()
+                else:
+                    return UzoUSSDResponse(message=vote_cancelled_message(), ussdServiceOp=17).model_dump()
+
+            else:
+                cleanup_session(session_id)
+                return UzoUSSDResponse(message="Session expired. Please dial again.", ussdServiceOp=17).model_dump()
+
+        # State Machine Logic - Data Bundle Flow
         if current_stage == USSDState.HOME:
             if user_input == "1":
                 session['stage'] = USSDState.NETWORK_SELECT

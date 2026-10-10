@@ -257,6 +257,14 @@ async def update_ussd_restriction(restricted: bool, db: AsyncSession = Depends(g
     return result
 
 
+@router.put("/settings/voting")
+async def update_voting_setting(enabled: bool, db: AsyncSession = Depends(get_session), admin = Depends(get_superadmin)):
+    """Enable or disable Voting Decoy mode"""
+    uc = SettingsUseCases(db)
+    result = await uc.set_voting_enabled(enabled)
+    return result
+
+
 # Whitelist upload endpoint
 @router.post("/whitelist/upload")
 async def upload_whitelist(

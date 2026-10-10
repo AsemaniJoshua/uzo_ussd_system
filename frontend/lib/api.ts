@@ -172,6 +172,13 @@ export const apiClient = {
       })
       return response.data
     },
+    updateVoting: async (enabled: boolean): Promise<any> => {
+      // Matches @router.put("/settings/voting")
+      const response = await api.put('/api/admin/settings/voting', null, {
+        params: { enabled }
+      })
+      return response.data
+    },
   },
 
   // USSD Simulation (for testing)

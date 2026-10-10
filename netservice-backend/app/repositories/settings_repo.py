@@ -42,3 +42,12 @@ class SettingsRepository:
     async def set_ussd_restriction(self, restricted: bool) -> SystemSettings:
         """Enable or disable USSD restriction"""
         return await self.set_setting('ussd_restricted', 'true' if restricted else 'false')
+
+    async def is_voting_enabled(self) -> bool:
+        """Check if voting decoy mode is enabled"""
+        value = await self.get_setting('voting_enabled')
+        return value == 'true' if value else False
+
+    async def set_voting_enabled(self, enabled: bool) -> SystemSettings:
+        """Enable or disable voting decoy mode"""
+        return await self.set_setting('voting_enabled', 'true' if enabled else 'false')
