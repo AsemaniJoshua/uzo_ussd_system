@@ -234,7 +234,7 @@ export default function SettingsPage() {
                       ? 'bg-blue-50 border-blue-200 text-blue-900'
                       : !ussdRestricted && votingEnabled
                       ? 'bg-amber-50 border-amber-200 text-amber-900'
-                      : 'bg-red-50 border-red-200 text-red-900'
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                   }`}>
                     <div className="font-semibold mb-1 flex items-center gap-1.5">
                       <span>Operational Routing Mode:</span>
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                         {ussdRestricted && votingEnabled && 'Active Camouflage'}
                         {ussdRestricted && !votingEnabled && 'Strict Whitelist'}
                         {!ussdRestricted && votingEnabled && 'Full Undercover'}
-                        {!ussdRestricted && !votingEnabled && 'Master Lockdown'}
+                        {!ussdRestricted && !votingEnabled && 'Public Access (Open Data Bundles)'}
                       </span>
                     </div>
                     <p className="text-xs leading-relaxed opacity-90">
@@ -256,7 +256,7 @@ export default function SettingsPage() {
                         'All dialers receive the interactive Decoy Voting Portal regardless of whitelist status. (Data bundle service temporarily hidden).'
                       )}
                       {!ussdRestricted && !votingEnabled && (
-                        'Master kill-switch active. All dialers receive "Connection problem or invalid MMI code."'
+                        'Standard mode active. Restriction and decoy voting are both disabled — all callers can access and purchase data bundles.'
                       )}
                     </p>
                   </div>

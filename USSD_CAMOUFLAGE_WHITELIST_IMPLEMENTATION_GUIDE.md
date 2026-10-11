@@ -29,7 +29,7 @@ The system is governed by two independent boolean toggles in the database:
 | **ON** | **ON** | Data Bundle Menus | **Decoy Voting Portal** | 🛡️ **Active Camouflage** *(Standard)* | Customers buy bundles; telco test SIMs see the campus election portal. |
 | **ON** | **OFF** | Data Bundle Menus | `"Connection problem or invalid MMI code."` | 🔒 **Strict Whitelist** | Non-whitelisted dialers receive standard GSM carrier fault error (`ussdServiceOp=17`). |
 | **OFF** | **ON** | Decoy Voting Portal | Decoy Voting Portal | 🎭 **Full Undercover** | Entire shortcode temporarily acts as a voting portal for all dialers (hides data service completely). |
-| **OFF** | **OFF** | Connection Error | Connection Error | ⛔ **Master Lockdown** | Service kill-switch; all dialers receive carrier network error. |
+| **OFF** | **OFF** | Data Bundle Menus | Data Bundle Menus | 🌐 **Public Access** | Standard open service. All callers can freely access and purchase data bundles. |
 
 ---
 
@@ -309,11 +309,8 @@ async def ussd_callback(request: Request):
     elif not is_restricted and is_voting:
         flow_type = 'VOTING'
     else:
-        # Master Kill-switch
-        return UzoUSSDResponse(
-            message="Connection problem or invalid MMI code.",
-            ussdServiceOp=17
-        ).model_dump()
+        # Scope 4: Restricted=OFF, Voting=OFF -> Default to DATA for all callers
+        flow_type = 'DATA'
 
     # 3. New Session Handshake
     session = get_or_create_session(session_id, is_new_session)

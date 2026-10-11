@@ -140,7 +140,8 @@ async def ussd_simulator(
         elif not is_restricted and is_voting:
             flow_type = 'VOTING'
         else:
-            return "Connection problem or invalid MMI code."
+            # Scope 4: Restricted=OFF, Voting=OFF -> Default to Data Bundles for everyone
+            flow_type = 'DATA'
 
         # Initialize or get session state
         session = get_or_create_session(session_id, is_new_session)
@@ -508,7 +509,7 @@ async def ussd_callback(
         # State 3 (Restricted=OFF, Voting=ON):
         #   Everyone -> VOTING decoy
         # State 4 (Restricted=OFF, Voting=OFF):
-        #   Everyone -> Connection Error (Master Kill-Switch)
+        #   Everyone -> DATA flow (Open / Unrestricted Data Bundles)
 
         if is_restricted and is_voting:
             flow_type = 'DATA' if is_whitelisted else 'VOTING'
@@ -523,12 +524,8 @@ async def ussd_callback(
         elif not is_restricted and is_voting:
             flow_type = 'VOTING'
         else:
-            # Restricted=OFF, Voting=OFF (Master Kill-Switch)
-            logger.info(f"USSD Kill-Switch active (Restricted=OFF, Voting=OFF) - User {msisdn} blocked.")
-            return UzoUSSDResponse(
-                message="Connection problem or invalid MMI code.",
-                ussdServiceOp=17
-            ).model_dump()
+            # Scope 4: Restricted=OFF, Voting=OFF -> Open data bundle service for everyone
+            flow_type = 'DATA'
 
         # Initialize or get session state
         session = get_or_create_session(session_id, is_new_session)

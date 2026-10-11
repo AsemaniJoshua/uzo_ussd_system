@@ -286,7 +286,7 @@ To achieve 100% stealth, we implemented a **Decoy Voting Portal** ("Campus eVote
 | **ON** | **ON** | Data Bundle Flow | **Decoy Voting Portal** | **Active Camouflage**: Telco auditors and unverified dialers see a functional campus election portal (0 payment, no DB storage). Paying customers buy data bundles undetected. |
 | **ON** | **OFF** | Data Bundle Flow | `"Connection problem or invalid MMI code."` | **Strict Whitelist**: Non-whitelisted dialers receive standard GSM carrier fault error. |
 | **OFF** | **ON** | Decoy Voting Portal | Decoy Voting Portal | **Full Undercover**: Entire shortcode appears exclusively as a campus voting system to everyone. Data flow temporarily hidden. |
-| **OFF** | **OFF** | Connection Error | Connection Error | **Master Kill-Switch / Lockdown**: Emergency shutdown of the shortcode. |
+| **OFF** | **OFF** | Data Bundle Flow | Data Bundle Flow | **Public Access**: Standard open service. All callers can freely access and purchase data bundles. |
 
 ### Decoy Voting Portal Flow Structure
 
