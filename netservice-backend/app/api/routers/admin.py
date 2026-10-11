@@ -272,26 +272,35 @@ async def upload_whitelist(
     db: AsyncSession = Depends(get_session),
     admin = Depends(get_superadmin)
 ):
-    """Upload Excel file with phone numbers for whitelist import"""
-    # Validate file type
-    if not file.filename.endswith(('.xlsx', '.xls')):
+    """Upload Excel (.xlsx, .xls) or CSV (.csv) file with phone numbers for whitelist import"""
+    import logging
+    import traceback
+    logger = logging.getLogger(__name__)
+
+    # Validate file type (case-insensitive)
+    filename = (file.filename or "").lower().strip()
+    if not (filename.endswith('.xlsx') or filename.endswith('.xls') or filename.endswith('.csv')):
         raise HTTPException(
             status_code=400,
-            detail="Invalid file type. Only Excel files (.xlsx, .xls) are accepted."
+            detail="Invalid file type. Only Excel files (.xlsx, .xls) and CSV (.csv) are accepted."
         )
     
     # Read file content
     try:
         file_content = await file.read()
+        if not file_content:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Error reading uploaded file: {e}")
         raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
     
     # Process the upload
-    from app.services.whitelist_service import WhitelistService
-    
     try:
+        from app.services.whitelist_service import WhitelistService
         service = WhitelistService(batch_size=500)
-        stats = await service.process_excel_upload(file_content, db)
+        stats = await service.process_excel_upload(file_content, db, filename=filename)
         
         # Check if there was an error
         if 'error' in stats:
@@ -302,8 +311,14 @@ async def upload_whitelist(
             "message": f"Successfully processed {stats['inserted']} numbers",
             "statistics": stats
         }
+    except HTTPException:
+        raise
     except ValueError as e:
+        logger.warning(f"Whitelist validation error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        tb = traceback.format_exc()
+        logger.error(f"Whitelist upload processing error:\n{tb}")
+        print(f"Whitelist upload processing error:\n{tb}")
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 

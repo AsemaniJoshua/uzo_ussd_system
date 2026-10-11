@@ -87,7 +87,16 @@ export default function WhitelistUploadPage() {
       setFile(null) // Clear file after successful upload
     } catch (error: any) {
       console.error('Upload error:', error)
-      const errorMessage = error?.response?.data?.detail || 'Failed to upload whitelist'
+      let errorMessage = 'Failed to upload whitelist'
+      if (typeof error?.response?.data?.detail === 'string') {
+        errorMessage = error.response.data.detail
+      } else if (Array.isArray(error?.response?.data?.detail)) {
+        errorMessage = error.response.data.detail.map((e: any) => e.msg || e.message).join(', ')
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
       toast.error(errorMessage)
     } finally {
       setIsUploading(false)

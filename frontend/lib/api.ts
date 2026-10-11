@@ -16,6 +16,10 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  // Allow browser/axios to set boundary automatically for multipart/form-data
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
   return config
 })
 
@@ -201,7 +205,7 @@ export const apiClient = {
       // Matches @router.post("/whitelist/upload")
       const response = await api.post('/api/admin/whitelist/upload', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined,
         },
       })
       return response.data
