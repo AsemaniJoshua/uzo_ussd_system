@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from io import BytesIO
 from typing import Dict, List, Tuple
-import pandas as pd
+import openpyxl
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,31 +60,36 @@ class WhitelistService:
         return True, country_code
     
     def read_excel(self, file_bytes: bytes, filename: str = "") -> List[str]:
-        """Read and extract phone numbers from Excel or CSV file"""
+        """Read and extract phone numbers from Excel (.xlsx) or CSV file without NumPy/pandas dependencies"""
         try:
             filename_lower = filename.lower()
+            numbers = []
+
+            # 1. CSV format (zero dependencies)
             if filename_lower.endswith('.csv'):
                 import csv
                 import io
                 text_content = file_bytes.decode('utf-8-sig', errors='ignore')
                 reader = csv.reader(io.StringIO(text_content))
-                numbers = []
                 for row in reader:
                     if row and str(row[0]).strip():
                         numbers.append(str(row[0]).strip())
+
+            # 2. Excel format via openpyxl (pure Python, zero NumPy/CPU optimization dependencies)
             else:
-                df = pd.read_excel(BytesIO(file_bytes))
-                first_column = df.iloc[:, 0]
-                
-                numbers = []
-                for value in first_column:
-                    if pd.isna(value):
-                        numbers.append('')
-                        continue
-                    if isinstance(value, (int, float)):
-                        numbers.append(str(int(value)))
-                    else:
-                        numbers.append(str(value).strip())
+                wb = openpyxl.load_workbook(BytesIO(file_bytes), read_only=True, data_only=True)
+                sheet = wb.active
+                if sheet:
+                    for row in sheet.iter_rows(values_only=True):
+                        if row and row[0] is not None:
+                            val = row[0]
+                            if isinstance(val, float):
+                                val_str = str(int(val))
+                            else:
+                                val_str = str(val).strip()
+                            if val_str:
+                                numbers.append(val_str)
+                wb.close()
             
             self.stats['total'] = len(numbers)
             return numbers

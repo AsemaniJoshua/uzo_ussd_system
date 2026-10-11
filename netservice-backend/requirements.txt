@@ -15,7 +15,6 @@ pymysql
 cryptography
 python-multipart
 bcrypt
-pandas
 openpyxl
 sshtunnel
 paramiko<4.0.0
