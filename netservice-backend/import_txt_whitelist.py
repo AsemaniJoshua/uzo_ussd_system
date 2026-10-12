@@ -95,12 +95,17 @@ def find_txt_files(folder_path: str | None = None) -> list[str]:
     if folder_path and os.path.exists(folder_path):
         candidates.append(folder_path)
 
-    # Standard locations
+    # 1. Check relative to script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(os.path.join(script_dir, "txt"))
+    candidates.append(os.path.join(os.getcwd(), "txt"))
+    candidates.append(os.path.join(os.getcwd(), "netservice-backend", "txt"))
+
+    # 2. Check local Windows Downloads folder if available
     win_download = r"C:\Users\JOSHUA ASEMANI\Downloads\txt"
     if os.path.exists(win_download):
         candidates.append(win_download)
 
-    candidates.append(os.path.join(os.getcwd(), "txt"))
     candidates.append(os.getcwd())
 
     for c in candidates:
